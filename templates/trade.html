@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>SmartForecast — Trading Simulator</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body { background: #121212; color: #EEE; font-family: Arial, sans-serif; padding: 20px; }
+    h2 { text-align: center; margin: 0; }
+    .glow-gradient { font-size: 2em; font-weight: bold; background: linear-gradient(90deg,#00e676,#00bfa5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
+    p.subtitle { text-align:center; color:#bbb; margin-top:6px; }
+
+    .stock-menu { text-align:center; margin: 16px 0 10px; }
+    .stock-menu a { margin-right: 12px; font-size: 1.05em; text-decoration: none; color: #00c853; padding: 5px 10px; border-radius: 6px; transition: background .3s ease; }
+    .stock-menu a:hover { background:#2c2c2c; }
+    .stock-menu a.active { background:#00c853; color:#111; }
+
+    .panel { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; padding: 14px; background:#1b1b1b; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,.35); margin: 10px 0 18px; }
+    .panel .item { display:flex; flex-direction:column; gap:6px; }
+    .panel label { color:#bbb; font-size:.92em; }
+    .panel input, .panel select { background:#101010; border:1px solid #2b2b2b; color:#eee; border-radius:8px; padding:8px 10px; outline:none; }
+    .panel .row { grid-column: 1 / -1; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+    .btn { background:#00c853; color:#111; border:none; padding:10px 14px; border-radius:10px; font-weight:600; cursor:pointer; box-shadow: 0 0 0 rgba(0,0,0,0); transition: transform .08s ease; }
+    .btn:active { transform: scale(.98); }
+
+    #latest-date-info { text-align:center; font-size:.95em; color:#bbb; margin: 4px 0 14px; min-height: 22px; display:flex; align-items:center; justify-content:center; }
+
+    .cards { display:grid; grid-template-columns: 1fr; gap:14px; }
+    .card { background:#1a1a1a; border-radius:12px; padding:12px; box-shadow: 0 0 10px rgba(255,255,255,.04); }
+    .card h3 { margin: 6px 0 10px; font-size:1.05em; color:#ddd; }
+
+    #equity-graph, #price-graph { width:100%; height:420px; }
+
+    .metrics { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+    .metric { background:#141414; border:1px solid #2a2a2a; border-radius:10px; padding:10px; }
+    .metric .k { color:#bbb; font-size:.9em; }
+    .metric .v { font-weight:700; font-size:1.1em; }
+
+    #calcResult { display: none; }
+
+    .table-wrap { overflow:auto; border-radius: 10px; border: 1px solid #2a2a2a; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:10px; border-bottom:1px solid #262626; font-size:.95em; }
+    th { text-align:left; color:#bbb; background:#161616; position: sticky; top: 0; }
+    tr:hover { background:#181818; }
+
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-weight:700; font-size:.85em; }
+    .pill.buy { background:#264d2a; color:#65ff84; }
+    .pill.sell { background:#4d2626; color:#ff7b7b; }
+    .pill.open { background:#2b3642; color:#74c0ff; }
+    .pill.closed { background:#2b4230; color:#78e08f; }
+
+    .muted { color:#9aa; }
+    .pos { color:#65ff84; font-weight:700; }
+    .neg { color:#ff7b7b; font-weight:700; }
+
+    .toolbar { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-top:8px; }
+    .link { color:#00c853; text-decoration:none; }
+
+    .page-switch { position: fixed; top: 16px; right: 16px; z-index: 9999; background: #00c853; color: #111; text-decoration: none; padding: 10px 14px; border-radius: 10px; font-weight: 700; box-shadow: 0 6px 16px rgba(0,0,0,.35); transition: transform .08s ease, filter .2s ease, box-shadow .2s ease; }
+    .page-switch:hover { filter: brightness(1.06); box-shadow: 0 8px 20px rgba(0,0,0,.45); }
+    .page-switch:active { transform: scale(.98); }
+
+    .history-controls { display:flex; gap:8px; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; }
+    .history-sum { display:flex; gap:10px; flex-wrap:wrap; }
+    .chip { background:#101010; border:1px solid #2b2b2b; padding:6px 10px; border-radius:999px; }
+    .calc { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+  <a class="page-switch" href="http://127.0.0.1:5000/" title="Back to Multi Stock Forecast" aria-label="Back to Multi Stock Forecast">
+    ← Forecast
+  </a>
+
+  <h2><span class="glow-gradient">SmartForecast</span></h2>
+  <p class="subtitle">Trading Simulator — Powered by AI Forecasts</p>
+
+  <div id="latest-date-info"></div>
+    <div style="margin-top: 30px; text-align: center; font-size: 0.85em; color: ##fff3cd; line-height: 1.5;">
+      <p>
+        Disclaimer : This platform is for educational and informational purposes only.
+        It does not constitute financial or investment advice.<br>
+        Trading and investing involve risks, and you should conduct your own research
+        or consult a licensed financial advisor before making investment decisions.
+      </p>
+    </div>
+
+
+  <div class="cards">
+    <div class="card">
+      <h3>Portfolio Growth</h3>
+      <div style="margin-bottom:8px;">
+        <label class="muted">Model:</label>
+        <select id="equityModel">
+          <option value="all">All models</option>
+          <option value="lstm">LSTM</option>
+          <option value="trans">Transformer</option>
+          <option value="tcn">TCN+GRU</option>
+        </select>
+      </div>
+      <div id="equity-graph"></div>
+    </div>
+
+    <div class="card">
+      <h3>Summary</h3>
+      <div class="calc" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <label class="muted">Calculator — Invest:</label>
+        <input id="calcAmount" type="number" value="10000" min="0" step="100" />
+        <button class="btn" id="calcBtn">Compute</button>
+        <span id="calcResult" class="chip"></span>
+      </div>
+      <div class="metrics" id="metrics"></div>
+    </div>
+
+    <div class="card">
+      <h3>Trade Signals</h3>
+        <div class="stock-menu" id="stock-menu">
+          {% for ticker in tickers %}
+            <a href="#" class="stock-link" data-ticker="{{ ticker }}">{{ ticker }}</a>
+          {% endfor %}
+        </div>
+      <div id="price-graph"></div>
+    </div>
+
+
+
+    <div class="card">
+      <h3>Trading History</h3>
+        <div>
+          <label class="muted">Filter table:</label>
+          <select id="histModel">
+            <option value="all">All models</option>
+            <option value="lstm">LSTM</option>
+            <option value="trans">Transformer</option>
+            <option value="tcn">TCN+GRU</option>
+          </select>
+
+          <!-- 🔹 เพิ่ม Status filter -->
+          <select id="histStatus">
+            <option value="all">All status</option>
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+          </select>
+
+          <!-- 🔹 เพิ่ม Ticker filter -->
+          <select id="histTicker">
+            <option value="all">All tickers</option>
+            {% for ticker in tickers %}
+              <option value="{{ ticker }}">{{ ticker }}</option>
+            {% endfor %}
+          </select>
+
+          <button class="btn" id="resetHistory">Reset</button>
+        </div>
+      </div>
+      <div class="history-sum" id="historySums"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Ticker</th>
+              <th>Model</th>
+              <th>Shares</th>
+              <th>Invested</th>
+              <th>Entry (DD-MM-YY)</th>
+              <th>Entry Px</th>
+              <th>Expected (DD-MM-YY)</th>
+              <th>Expected Px</th>
+              <th>Current (DD-MM-YY)</th>
+              <th>Current Px</th>
+              <th>Exit (DD-MM-YY)</th>
+              <th>Exit Px</th>
+              <th>Net P&L</th>
+              <th>Return %</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    <div id="pagination" style="margin-top:8px; text-align:center;"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentTicker = null;
+    let lastSim = null;
+
+    // ---------- Format helpers ----------
+    function fmt(n, d = 2) {
+      if (n === null || n === undefined || n === '') return "-";
+      let v = Number(n);
+      if (!Number.isFinite(v)) return "-";
+      if (Math.abs(v) < 1e-8) return "0";
+      return v.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
+    }
+    function fmtPnL(value, prefix = "$") {
+      if (value === null || value === undefined || value === '') return "-";
+      let v = Number(value);
+      if (!Number.isFinite(v)) return "-";
+      if (Math.abs(v) < 1e-8) return prefix + "0.00";
+      return prefix + fmt(v);
+    }
+    function fmtPct(value) {
+      if (value === null || value === undefined || value === '') return "-";
+      let v = Number(value);
+      if (!Number.isFinite(v)) return "-";
+      if (Math.abs(v) < 1e-8) return "0%";
+      return fmt(v) + "%";
+    }
+    function pnlClass(value) {
+      if (value === null || value === undefined || value === '') return "muted";
+      let v = Number(value);
+      if (!Number.isFinite(v) || Math.abs(v) < 1e-8) return "muted";
+      return v > 0 ? "pos" : "neg";
+    }
+    function fmtDate(dateStr) {
+      if (!dateStr || dateStr === '-') return '-';
+      let d = new Date(dateStr);
+      if (isNaN(d)) return dateStr; // กันพังถ้า parse ไม่ได้
+      // dd-mm-yy
+      let dd = String(d.getDate()).padStart(2, '0');
+      let mm = String(d.getMonth() + 1).padStart(2, '0');
+      let yy = String(d.getFullYear()).slice(-2);
+      return `${dd}-${mm}-${yy}`;
+    }
+
+
+    // ---------- UI painters ----------
+    function setActive(ticker) {
+      $(".stock-link").removeClass("active");
+      $(`.stock-link[data-ticker="${ticker}"]`).addClass("active");
+    }
+    let lastReturnPct = 0;   // เก็บ %return ล่าสุด
+    function loadPerformance(model='all') {
+      $.getJSON(`/performance?model=${model}`, function(res){
+        lastReturnPct = res.total_return_pct;
+        $("#metrics").html(`
+          <div class="metric"><div class="k">Final Equity</div><div class="v">${fmtPnL(res.final_equity)}</div></div>
+          <div class="metric"><div class="k">Total Return</div><div class="v ${pnlClass(res.total_return_pct)}">${fmtPct(res.total_return_pct)}</div></div>
+          <div class="metric"><div class="k">Max Drawdown</div><div class="v ${pnlClass(-Math.abs(res.max_drawdown_pct))}">${fmtPct(res.max_drawdown_pct)}</div></div>
+          <div class="metric"><div class="k"># Trades</div><div class="v">${res.num_trades}</div></div>
+          <div class="metric"><div class="k">Win Rate</div><div class="v">${fmtPct(res.win_rate_pct)}</div></div>
+        `);
+      });
+    }
+
+    function plotEquity(model="all") {
+      $.getJSON(`/equity_curve?model=${model}`, function(res){
+        if (!res.dates || !res.equity || res.dates.length === 0) {
+          $("#equity-graph").html("<div class='muted'>No equity curve data</div>");
+          return;
+        }
+
+        // baseline
+        let baseline = (model === "all") ? 30000 : 10000;
+        let startDate = new Date("2025-08-01");
+
+        // จัดรูปข้อมูลจาก backend
+        let raw = res.dates.map((d,i)=>({
+          date: new Date(d),
+          equity: Number(res.equity[i])
+        }));
+
+        if (raw.length === 0) return;
+
+        // 🔹 เอา record ล่าสุดต่อวัน
+        let latestPerDay = {};
+        raw.forEach(r => {
+          let key = r.date.toISOString().split("T")[0];
+          latestPerDay[key] = r.equity;  // overwrite → ได้ค่าล่าสุดเสมอ
+        });
+
+        // 🔹 หาวันสุดท้าย
+        let endDate = new Date(raw[raw.length-1].date);
+        endDate.setDate(endDate.getDate());
+        if (endDate < startDate) endDate = startDate;
+
+        // 🔹 สร้างช่วงวันจาก startDate → endDate
+        let allDays = [];
+        let cur = new Date(startDate);
+        while(cur <= endDate) {
+          allDays.push(cur.toISOString().split("T")[0]);
+          cur.setDate(cur.getDate()+1);
+        }
+
+        // 🔹 fill forward equity
+        let dates = [], equity = [];
+        let lastEquity = baseline;
+        allDays.forEach(day => {
+          if (latestPerDay[day] !== undefined) {
+            lastEquity = latestPerDay[day];
+          }
+          dates.push(day);
+          equity.push(lastEquity);
+        });
+
+        // ---------- plot ----------
+        const trace = {
+          x: dates,
+          y: equity,
+          mode:'lines+markers',
+          name: (model === "all") ? "Equity (All)" : `Equity (${model.toUpperCase()})`,
+          line:{ width:2, color:(model==="lstm"?"#ff5252":model==="trans"?"#29b6f6":model==="tcn"?"#ffeb3b":"#00e676") },
+          marker:{ size:6 },
+          hovertemplate:'Date: %{x}<br>Equity: %{y:.2f}<extra></extra>'
+        };
+
+        const layout = {
+          title:'',
+          xaxis:{ title:'Date', type:'date', tickformat:'%b %d, %Y' },
+          yaxis:{ title:'Equity (USD)', tickprefix:'$', tickformat:',.0f' },
+          plot_bgcolor:'#1a1a1a',
+          paper_bgcolor:'#1a1a1a',
+          font:{color:'#fff'},
+          showlegend:false
+        };
+
+        Plotly.newPlot('equity-graph', [trace], layout, {responsive:true});
+      }).fail(function(){
+        $("#equity-graph").html("<div class='muted'>Error loading equity curve</div>");
+      });
+    }
+
+
+
+    function plotPriceWithMarkers(actualDates, actualPrices, ticker) {
+      const maxPoints = 60;
+      let dates = actualDates;
+      let prices = actualPrices;
+
+      if (dates.length > maxPoints) {
+        dates = dates.slice(-maxPoints);
+        prices = prices.slice(-maxPoints);
+      }
+
+      // 🔹 เปลี่ยนเส้นหลักเป็น "Actual Price" สีเขียว
+      const priceTrace = {
+        x: dates,
+        y: prices,
+        mode: 'lines',
+        name: 'Actual Price',
+        line: { color: '#00e676', width: 2 }
+      };
+
+      $.getJSON(`/markers/${ticker}`, function(res) {
+        const markers = [];
+
+        // กำหนดสี/สัญลักษณ์ตามโมเดล
+        const modelStyles = {
+          lstm:  { colorBuy:'#ff5252', colorExit:'#ff5252', symbolBuy:'triangle-up', symbolExit:'triangle-down', offset:0 },
+          trans: { colorBuy:'#29b6f6', colorExit:'#29b6f6', symbolBuy:'triangle-up', symbolExit:'triangle-down', offset:-5 },
+          tcn:   { colorBuy:'#ffeb3b', colorExit:'#ffeb3b', symbolBuy:'triangle-up', symbolExit:'triangle-down', offset:-10 }
+        };
+
+        // วนทุกโมเดลแล้ววาง marker BUY/EXIT
+        for (const [model, style] of Object.entries(modelStyles)) {
+          if (res[model]) {
+            if (res[model].buy && res[model].buy.length) {
+              markers.push({
+                x: res[model].buy.map(b => b.date),
+                y: res[model].buy.map(b => b.price + style.offset),
+                mode: 'markers+text',
+                text: `${model.toUpperCase()} BUY`,
+                textposition: 'bottom center',
+                name: `${model.toUpperCase()} BUY`,
+                marker: { size: 12, symbol: style.symbolBuy, color: style.colorBuy },
+                hovertemplate: res[model].buy.map(b => {
+                  let idx = actualDates.indexOf(b.date);
+                  let actual = (idx !== -1) ? actualPrices[idx] : b.price;
+                  return `${actual.toFixed(2)}<br>${model.toUpperCase()} BUY<extra></extra>`;
+                })
+              });
+            }
+
+            if (res[model].exit && res[model].exit.length) {
+              markers.push({
+                x: res[model].exit.map(e => e.date),
+                y: res[model].exit.map(e => e.price),
+                mode: 'markers+text',
+                text: `${model.toUpperCase()} EXIT`,
+                textposition: 'top center',
+                name: `${model.toUpperCase()} EXIT`,
+                marker: { size: 12, symbol: style.symbolExit, color: style.colorExit },
+                hovertemplate: res[model].exit.map(e => {
+                  return `${model.toUpperCase()}: ${e.price.toFixed(2)}<extra></extra>`;
+                })
+              });
+            }
+          }
+        }
+
+        const layout = {
+          title: '',
+          paper_bgcolor: '#1a1a1a',
+          plot_bgcolor: '#1a1a1a',
+          font: {color: '#EEE'},
+          margin: {t:30, l:40, r:20, b:40}
+        };
+
+        Plotly.newPlot('price-graph', [priceTrace, ...markers], layout, {responsive:true});
+      });
+    }
+
+
+    function runSim(ticker) {
+      const params = new URLSearchParams({ model: 'lstm' });
+      $.getJSON(`/simulate/${ticker}?${params.toString()}`, function(sim){
+        lastSim = sim;
+        $('#latest-date-info').text(`📅 Latest update ${sim.future_dates[0]}`);
+
+        // plot equity curve จาก logs
+        // ✅ ใหม่ → ใช้ model ปัจจุบันจาก dropdown
+        const model = $('#equityModel').val() || "all";
+        plotEquity(model);
+
+
+
+        // 🔥 โหลดจุดเข้า/ออกจริงจาก CSV แล้วค่อยวาด price graph
+        $.getJSON(`/data/${ticker}`, function(data){
+          plotPriceWithMarkers(data.actual_dates, data.actual_prices, ticker);
+        });
+
+        loadHistory($('#histModel').val());
+        loadPerformance('all');   // ✅ refresh performance
+      }).fail(function(xhr){
+        alert(xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Simulation error');
+      });
+    }
+
+
+    // ----- History (unchanged) -----
+    function paintHistorySums(res) {
+      const t = res.totals || {overall_pnl:0, realized_pnl:0, open_pnl:0, invested_usd:0};
+      let extra = '';
+      if (res.model === 'all' && res.totals_by_model) {
+        const m = res.totals_by_model;
+        extra = `
+          <span class="chip">LSTM: <b class="${pnlClass(m.lstm)}">${fmtPnL(m.lstm)}</b></span>
+          <span class="chip">Transformer: <b class="${pnlClass(m.trans)}">${fmtPnL(m.trans)}</b></span>
+          <span class="chip">TCN+GRU: <b class="${pnlClass(m.tcn)}">${fmtPnL(m.tcn)}</b></span>
+        `;
+      }
+      $('#historySums').html(`
+        <span class="chip">Total P&L: <b class="${pnlClass(t.overall_pnl)}">${fmtPnL(t.overall_pnl)}</b></span>
+        <span class="chip">Realized: <b class="${pnlClass(t.realized_pnl)}">${fmtPnL(t.realized_pnl)}</b></span>
+        <span class="chip">Open (Unrealized): <b class="${pnlClass(t.open_pnl)}">${fmtPnL(t.open_pnl)}</b></span>
+        <span class="chip">Invested: <b>${fmtPnL(t.invested_usd)}</b></span>
+        ${extra}
+      `);
+    }
+    let historyData = [];
+    let currentPage = 1;
+    const pageSize = 10;
+
+    function paintHistoryTable(items) {
+      historyData = items || [];
+      renderPage(currentPage);
+    }
+
+    function renderPage(page) {
+      currentPage = page;
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      const pageItems = historyData.slice(start, end);
+
+      const body = pageItems.map(r => {
+        return `<tr>
+          <td><span class="pill ${String(r.status).toLowerCase()}">${r.status}</span></td>
+          <td>${r.ticker}</td>
+          <td>${(r.model||'').toUpperCase()}</td>
+          <td>${fmt(r.shares)}</td>
+          <td>${fmtPnL(r.invested_usd)}</td>
+          <td>${fmtDate(r.entry_date)}</td>
+          <td>${fmtPnL(r.entry_price)}</td>
+          <td>${fmtDate(r.expected_date)}</td>
+          <td>${fmtPnL(r.expected_price)}</td>
+          <td>${String(r.status).toLowerCase() === 'closed' ? '-' : fmtDate(r.current_date)}</td>
+          <td>${String(r.status).toLowerCase() === 'closed' ? '-' : fmtPnL(r.current_price)}</td>
+          <td>${r.exit_date ? fmtDate(r.exit_date) : '-'}</td>
+          <td>${r.exit_price ? fmtPnL(r.exit_price) : '-'}</td>
+          <td class="${pnlClass(r.net_pnl_usd)}">${fmtPnL(r.net_pnl_usd)}</td>
+          <td class="${pnlClass(r.return_pct)}">${fmtPct(r.return_pct)}</td>
+        </tr>`;
+      }).join('');
+
+      $("#history-body").html(body || `<tr><td colspan="15" class="muted">No logs yet</td></tr>`);
+
+      // pagination controls
+      const totalPages = Math.ceil(historyData.length / pageSize);
+      let html = "";
+      if (totalPages > 1) {
+        html += `<button class="btn" onclick="renderPage(${Math.max(1, page-1)})" ${page===1?'disabled':''}>Prev</button>`;
+        html += ` <span class="chip">Page ${page} / ${totalPages}</span> `;
+        html += `<button class="btn" onclick="renderPage(${Math.min(totalPages, page+1)})" ${page===totalPages?'disabled':''}>Next</button>`;
+      }
+      $("#pagination").html(html);
+    }
+
+    function loadHistory() {
+        const model = $('#histModel').val() || "all";
+        const status = $('#histStatus').val() || "all";
+        const ticker = $('#histTicker').val() || "all";
+
+      $.getJSON(`/logs?model=${model}&status=${status}&ticker=${ticker}`, function(res){
+        paintHistorySums(res);
+        paintHistoryTable(res.items);
+      }).fail(function(){
+        $("#history-body").html(`<tr><td colspan="17" class="muted">Failed to load logs</td></tr>`);
+      });
+    }
+
+    // ---------- Init ----------
+    $(document).ready(function(){
+      const firstTicker = $(".stock-link").first().data("ticker");
+      currentTicker = firstTicker; setActive(firstTicker); runSim(firstTicker);
+      loadPerformance('all');
+      $(".stock-link").click(function(e){ e.preventDefault(); const t=$(this).data('ticker'); currentTicker=t; setActive(t); runSim(t); });
+      $('#resetHistory').click(function(){
+        $('#histModel').val('all');
+        $('#histStatus').val('all');
+        $('#histTicker').val('all');
+        loadHistory();
+      });
+      $('#equityModel').change(function(){
+        const model = $(this).val();
+        plotEquity(model);
+        loadPerformance(model);   // ✅ optional: sync performance panel ด้วย
+      });
+      $('#histModel').change(function(){ loadHistory(); });
+      $('#histStatus').change(function(){ loadHistory(); });
+      $('#histTicker').change(function(){ loadHistory(); });
+      $('#calcBtn').click(function(){
+        let amt = Number($('#calcAmount').val());
+        if (!Number.isFinite(amt) || amt <= 0) {
+          $('#calcResult').text('Invalid amount').show();  // แสดงข้อความ error
+          return;
+        }
+        let result = amt * (1 + lastReturnPct/100.0);
+        $('#calcResult').text(`≈ ${fmtPnL(result)}`).show();  // 🔹 ค่อย show ตอนคำนวณแล้ว
+      });
+    });
+  </script>
+</body>
+</html>

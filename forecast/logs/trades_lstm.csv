@@ -1,0 +1,3 @@
+trade_id,logged_at,status,ticker,model,entry_date,entry_price,shares,invested_usd,exit_date,exit_price,gross_pnl_usd,net_pnl_usd,return_pct,expected_price,expected_date,current_price,current_date
+NVDA-lstm-2025-08-01-1000,2025-09-22T08:14:13Z,CLOSED,NVDA,lstm,2025-08-01,173.710205,5.756714,1000.0,2025-08-29,174.170166,2.647864,2.647864,0.264786,194.239139,2025-08-28,174.170166,2025-08-29
+NVDA-lstm-2025-08-29-1000,2025-09-22T10:32:06Z,OPEN,NVDA,lstm,2025-08-29,174.170166,5.741511,1000.0,,,0.0,0.0,0.0,195.140391,2025-09-25,174.170166,2025-08-29
