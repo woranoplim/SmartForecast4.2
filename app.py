@@ -947,9 +947,4 @@ def bootstrap_autotrade():
                 print(f"[autotrade] {t}/{m} -> {e}")
 
 
-# ─────────────────────────────────────────────────────────
-# Run
-# ─────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    bootstrap_autotrade()
-    app.run(debug=True)
+
