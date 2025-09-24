@@ -196,12 +196,13 @@
       if (Math.abs(v) < 1e-8) return "0";
       return v.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
     }
+    // ใช้ใน Summary (Final Equity, Win Rate)
     function fmtPnL(value, prefix = "$") {
       if (value === null || value === undefined || value === '') return "-";
       let v = Number(value);
       if (!Number.isFinite(v)) return "-";
       if (Math.abs(v) < 1e-8) return prefix + "0.00";
-      return (v > 0 ? "+" : "") + prefix + fmt(v);
+      return prefix + fmt(v);
     }
     
     function fmtPct(value) {
@@ -209,8 +210,26 @@
       let v = Number(value);
       if (!Number.isFinite(v)) return "-";
       if (Math.abs(v) < 1e-8) return "0%";
+      return fmt(v) + "%";
+    }
+    
+    // ใช้ใน History (Net P&L, Return %)
+    function fmtPnLWithSign(value, prefix = "$") {
+      if (value === null || value === undefined || value === '') return "-";
+      let v = Number(value);
+      if (!Number.isFinite(v)) return "-";
+      if (Math.abs(v) < 1e-8) return prefix + "0.00";
+      return (v > 0 ? "+" : "") + prefix + fmt(v);
+    }
+    
+    function fmtPctWithSign(value) {
+      if (value === null || value === undefined || value === '') return "-";
+      let v = Number(value);
+      if (!Number.isFinite(v)) return "-";
+      if (Math.abs(v) < 1e-8) return "0%";
       return (v > 0 ? "+" : "") + fmt(v) + "%";
     }
+
     function pnlClass(value) {
       if (value === null || value === undefined || value === '') return "muted";
       let v = Number(value);
@@ -482,8 +501,8 @@
           <td>${String(r.status).toLowerCase() === 'closed' ? '-' : fmtPnL(r.current_price)}</td>
           <td>${r.exit_date ? fmtDate(r.exit_date) : '-'}</td>
           <td>${r.exit_price ? fmtPnL(r.exit_price) : '-'}</td>
-          <td class="${pnlClass(r.net_pnl_usd)}">${fmtPnL(r.net_pnl_usd)}</td>
-          <td class="${pnlClass(r.return_pct)}">${fmtPct(r.return_pct)}</td>
+          <td class="${pnlClass(r.net_pnl_usd)}">${fmtPnLWithSign(r.net_pnl_usd)}</td>
+          <td class="${pnlClass(r.return_pct)}">${fmtPctWithSign(r.return_pct)}</td>
         </tr>`;
       }).join('');
 
@@ -546,5 +565,6 @@
   </script>
 </body>
 </html>
+
 
 
