@@ -201,14 +201,15 @@
       let v = Number(value);
       if (!Number.isFinite(v)) return "-";
       if (Math.abs(v) < 1e-8) return prefix + "0.00";
-      return prefix + fmt(v);
+      return (v > 0 ? "+" : "") + prefix + fmt(v);
     }
+    
     function fmtPct(value) {
       if (value === null || value === undefined || value === '') return "-";
       let v = Number(value);
       if (!Number.isFinite(v)) return "-";
       if (Math.abs(v) < 1e-8) return "0%";
-      return fmt(v) + "%";
+      return (v > 0 ? "+" : "") + fmt(v) + "%";
     }
     function pnlClass(value) {
       if (value === null || value === undefined || value === '') return "muted";
@@ -545,4 +546,5 @@
   </script>
 </body>
 </html>
+
 
