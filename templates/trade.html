@@ -70,8 +70,8 @@
   </style>
 </head>
 <body>
-  <a class="page-switch" href="{{ url_for('index') }}" title="Back to Multi Stock Forecast" aria-label="Back to Multi Stock Forecast">
-  ← Forecast
+  <a class="page-switch" href="http://127.0.0.1:5000/" title="Back to Multi Stock Forecast" aria-label="Back to Multi Stock Forecast">
+    ← Forecast
   </a>
 
   <h2><span class="glow-gradient">SmartForecast</span></h2>
@@ -155,7 +155,14 @@
           <button class="btn" id="resetHistory">Reset</button>
         </div>
       </div>
-      <div class="history-sum" id="historySums"></div>
+      <div class="history-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:6px;">
+        <div class="history-sum" id="historySums"></div>
+        <label style="font-size:.9em; color:#bbb; white-space:nowrap;">
+          <input type="checkbox" id="toggleErrorCol" /> Show Prediction Error %
+        </label>
+      </div>
+
+
       <div class="table-wrap">
         <table>
           <thead>
@@ -175,6 +182,7 @@
               <th>Exit Px</th>
               <th>Net P&L</th>
               <th>Return %</th>
+              <th class="col-error" style="display:none;">Pred. Error %</th>
             </tr>
           </thead>
           <tbody id="history-body"></tbody>
@@ -204,7 +212,7 @@
       if (Math.abs(v) < 1e-8) return prefix + "0.00";
       return prefix + fmt(v);
     }
-    
+
     function fmtPct(value) {
       if (value === null || value === undefined || value === '') return "-";
       let v = Number(value);
@@ -212,7 +220,7 @@
       if (Math.abs(v) < 1e-8) return "0%";
       return fmt(v) + "%";
     }
-    
+
     // ใช้ใน History (Net P&L, Return %)
     function fmtPnLWithSign(value, prefix = "$") {
       if (value === null || value === undefined || value === '') return "-";
@@ -221,7 +229,7 @@
       if (Math.abs(v) < 1e-8) return prefix + "0.00";
       return (v > 0 ? "+" : "") + prefix + fmt(v);
     }
-    
+
     function fmtPctWithSign(value) {
       if (value === null || value === undefined || value === '') return "-";
       let v = Number(value);
@@ -229,6 +237,7 @@
       if (Math.abs(v) < 1e-8) return "0%";
       return (v > 0 ? "+" : "") + fmt(v) + "%";
     }
+
 
     function pnlClass(value) {
       if (value === null || value === undefined || value === '') return "muted";
@@ -245,6 +254,14 @@
       let mm = String(d.getMonth() + 1).padStart(2, '0');
       let yy = String(d.getFullYear()).slice(-2);
       return `${dd}-${mm}-${yy}`;
+    }
+    function calcErrorPct(r) {
+      if (String(r.status).toLowerCase() !== 'closed') return "-";
+      let expected = Number(r.expected_price);
+      let exit = Number(r.exit_price);
+      if (!Number.isFinite(expected) || expected === 0 || !Number.isFinite(exit)) return "-";
+      let err = ((exit - expected) / expected) * 100.0;
+      return (err > 0 ? "+" : "") + fmt(err) + "%";
     }
 
 
@@ -503,6 +520,11 @@
           <td>${r.exit_price ? fmtPnL(r.exit_price) : '-'}</td>
           <td class="${pnlClass(r.net_pnl_usd)}">${fmtPnLWithSign(r.net_pnl_usd)}</td>
           <td class="${pnlClass(r.return_pct)}">${fmtPctWithSign(r.return_pct)}</td>
+          <td class="col-error" style="display:none;">
+            ${String(r.status).toLowerCase() === 'closed' && r.exit_price && r.expected_price
+              ? fmtPctWithSign(((r.exit_price - r.expected_price) / r.expected_price) * 100.0)
+              : "-"}
+          </td>
         </tr>`;
       }).join('');
 
@@ -561,10 +583,14 @@
         let result = amt * (1 + lastReturnPct/100.0);
         $('#calcResult').text(`≈ ${fmtPnL(result)}`).show();  // 🔹 ค่อย show ตอนคำนวณแล้ว
       });
+      $('#toggleErrorCol').change(function(){
+        if(this.checked){
+          $('.col-error').show();
+        } else {
+          $('.col-error').hide();
+        }
+      });
     });
   </script>
 </body>
 </html>
-
-
-
