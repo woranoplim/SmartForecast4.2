@@ -60,10 +60,11 @@ def generate_dataset_for_ticker(ticker, save_dir=f"forecast/datasets"):
 
 # ---------- MAIN ----------
 if __name__ == "__main__":
-    if not is_market_open():
-        print("⛔ ตลาดปิดวันนี้ ไม่โหลดข้อมูลใหม่")
-        exit()
+    # if not is_market_open():
+    #     print("⛔ ตลาดปิดวันนี้ ไม่โหลดข้อมูลใหม่")
+    #     exit()
 
     tickers = ["AMZN", "TSLA", "GOOGL","META","AAPL","NVDA","MSFT"]
     for ticker in tickers:
         generate_dataset_for_ticker(ticker)
+
