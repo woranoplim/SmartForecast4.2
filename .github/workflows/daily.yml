@@ -25,6 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install --upgrade yfinance==0.2.43
           pip install -r requirements.txt
 
       - name: Run generate_dataset.py
