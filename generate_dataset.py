@@ -13,8 +13,8 @@ def is_market_open():
 def generate_dataset_for_ticker(ticker, save_dir=f"forecast/datasets"):
 
     start_date = (datetime.now() - relativedelta(years=5)).strftime("%Y-%m-%d")
-    end_date = datetime.now().strftime("%Y-%m-%d")
-    # end_date = "2025-09-20"
+    # end_date = datetime.now().strftime("%Y-%m-%d")
+    end_date = "2025-10-04"
     # --- โหลดข้อมูลหุ้นและ VIX ---
     stock = yf.download(ticker, start=start_date, end=end_date, progress=False)
     vix = yf.download("^VIX", start=start_date, end=end_date, progress=False)[["Close"]].rename(columns={"Close": "VIX_Close"})
@@ -67,4 +67,5 @@ if __name__ == "__main__":
     tickers = ["AMZN", "TSLA", "GOOGL","META","AAPL","NVDA","MSFT"]
     for ticker in tickers:
         generate_dataset_for_ticker(ticker)
+
 
