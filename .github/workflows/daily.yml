@@ -28,14 +28,6 @@ jobs:
           pip install --upgrade yfinance==0.2.43
           pip install -r requirements.txt
       
-      - name: Set timezone and system deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y tzdata ca-certificates
-          sudo update-ca-certificates
-          sudo ln -fs /usr/share/zoneinfo/Asia/Bangkok /etc/localtime
-          date
-
       - name: Run generate_dataset.py
         run: |
           echo "Running generate_dataset.py..."
