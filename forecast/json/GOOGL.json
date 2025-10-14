@@ -1,188 +1,188 @@
 [
     {
-        "Date": "2025-10-03",
-        "LSTM_Predicted_Price": 245.35000610351562,
-        "Transformer_Predicted_Price": 245.35000610351562,
-        "TCN_GRU_Predicted_Price": 245.35000610351562
-    },
-    {
-        "Date": "2025-10-04",
-        "LSTM_Predicted_Price": 246.15438459728466,
-        "Transformer_Predicted_Price": 240.81925693208177,
-        "TCN_GRU_Predicted_Price": 245.3491140395181
-    },
-    {
-        "Date": "2025-10-05",
-        "LSTM_Predicted_Price": 242.05754412864735,
-        "Transformer_Predicted_Price": 244.76327660114293,
-        "TCN_GRU_Predicted_Price": 245.68214639059443
-    },
-    {
-        "Date": "2025-10-06",
-        "LSTM_Predicted_Price": 245.92183374992965,
-        "Transformer_Predicted_Price": 248.66494516632156,
-        "TCN_GRU_Predicted_Price": 245.9831083097597
-    },
-    {
-        "Date": "2025-10-07",
-        "LSTM_Predicted_Price": 244.96222149659116,
-        "Transformer_Predicted_Price": 247.12117723460324,
-        "TCN_GRU_Predicted_Price": 248.23640347151013
-    },
-    {
-        "Date": "2025-10-08",
-        "LSTM_Predicted_Price": 245.75789871038432,
-        "Transformer_Predicted_Price": 251.59796384618676,
-        "TCN_GRU_Predicted_Price": 248.65924180633738
-    },
-    {
-        "Date": "2025-10-09",
-        "LSTM_Predicted_Price": 245.58454581486512,
-        "Transformer_Predicted_Price": 242.44489001557304,
-        "TCN_GRU_Predicted_Price": 250.62456116088651
-    },
-    {
         "Date": "2025-10-10",
-        "LSTM_Predicted_Price": 243.42231430086213,
-        "Transformer_Predicted_Price": 245.21081487190168,
-        "TCN_GRU_Predicted_Price": 253.66509548845352
+        "LSTM_Predicted_Price": 236.57000732421875,
+        "Transformer_Predicted_Price": 236.57000732421875,
+        "TCN_GRU_Predicted_Price": 236.57000732421875
     },
     {
         "Date": "2025-10-11",
-        "LSTM_Predicted_Price": 247.41757646578117,
-        "Transformer_Predicted_Price": 241.37572937853838,
-        "TCN_GRU_Predicted_Price": 254.18105945502248
+        "LSTM_Predicted_Price": 237.3456006457127,
+        "Transformer_Predicted_Price": 232.20139375989675,
+        "TCN_GRU_Predicted_Price": 236.33073303375932
     },
     {
         "Date": "2025-10-12",
-        "LSTM_Predicted_Price": 249.23419898874272,
-        "Transformer_Predicted_Price": 241.09524105931632,
-        "TCN_GRU_Predicted_Price": 256.0114577859458
+        "LSTM_Predicted_Price": 233.39536809808124,
+        "Transformer_Predicted_Price": 236.0042742929545,
+        "TCN_GRU_Predicted_Price": 236.66783778135868
     },
     {
         "Date": "2025-10-13",
-        "LSTM_Predicted_Price": 243.74203881197536,
-        "Transformer_Predicted_Price": 241.5205216021368,
-        "TCN_GRU_Predicted_Price": 256.2566730172657
+        "LSTM_Predicted_Price": 237.12137177147815,
+        "Transformer_Predicted_Price": 239.76631928206916,
+        "TCN_GRU_Predicted_Price": 237.0561138649282
     },
     {
         "Date": "2025-10-14",
-        "LSTM_Predicted_Price": 246.8837712192617,
-        "Transformer_Predicted_Price": 238.44316404267192,
-        "TCN_GRU_Predicted_Price": 255.9903699780043
+        "LSTM_Predicted_Price": 236.19609982465408,
+        "Transformer_Predicted_Price": 238.27779602212104,
+        "TCN_GRU_Predicted_Price": 239.03068726290076
     },
     {
         "Date": "2025-10-15",
-        "LSTM_Predicted_Price": 247.08201416271186,
-        "Transformer_Predicted_Price": 251.49568359047043,
-        "TCN_GRU_Predicted_Price": 256.6786631600953
+        "LSTM_Predicted_Price": 236.96330324675364,
+        "Transformer_Predicted_Price": 242.5943781095266,
+        "TCN_GRU_Predicted_Price": 239.237995331634
     },
     {
         "Date": "2025-10-16",
-        "LSTM_Predicted_Price": 244.78126412109305,
-        "Transformer_Predicted_Price": 249.04745050926067,
-        "TCN_GRU_Predicted_Price": 256.23532197732493
+        "LSTM_Predicted_Price": 236.79615388974344,
+        "Transformer_Predicted_Price": 233.76885257750837,
+        "TCN_GRU_Predicted_Price": 241.07113899695833
     },
     {
         "Date": "2025-10-17",
-        "LSTM_Predicted_Price": 248.4052229270419,
-        "Transformer_Predicted_Price": 249.89847956290032,
-        "TCN_GRU_Predicted_Price": 257.6231980694756
+        "LSTM_Predicted_Price": 234.71129914191624,
+        "Transformer_Predicted_Price": 236.43579713525105,
+        "TCN_GRU_Predicted_Price": 243.61977892290452
     },
     {
         "Date": "2025-10-18",
-        "LSTM_Predicted_Price": 245.3911580394015,
-        "Transformer_Predicted_Price": 239.16971360865682,
-        "TCN_GRU_Predicted_Price": 258.4909862270688
+        "LSTM_Predicted_Price": 238.56358842703776,
+        "Transformer_Predicted_Price": 232.73795250234252,
+        "TCN_GRU_Predicted_Price": 244.17943456485955
     },
     {
         "Date": "2025-10-19",
-        "LSTM_Predicted_Price": 244.505821081857,
-        "Transformer_Predicted_Price": 241.52280294613047,
-        "TCN_GRU_Predicted_Price": 260.4737958855694
+        "LSTM_Predicted_Price": 240.31520201118838,
+        "Transformer_Predicted_Price": 232.46750162774697,
+        "TCN_GRU_Predicted_Price": 245.8658748464877
     },
     {
         "Date": "2025-10-20",
-        "LSTM_Predicted_Price": 246.4442907724806,
-        "Transformer_Predicted_Price": 243.5507861405058,
-        "TCN_GRU_Predicted_Price": 260.33521886195376
+        "LSTM_Predicted_Price": 235.01958211747842,
+        "Transformer_Predicted_Price": 232.87756324839938,
+        "TCN_GRU_Predicted_Price": 245.7328773152476
     },
     {
         "Date": "2025-10-21",
-        "LSTM_Predicted_Price": 246.72091835571337,
-        "Transformer_Predicted_Price": 248.23640347151013,
-        "TCN_GRU_Predicted_Price": 262.6664306954881
+        "LSTM_Predicted_Price": 238.04888572503114,
+        "Transformer_Predicted_Price": 229.91033079569388,
+        "TCN_GRU_Predicted_Price": 245.33323609064973
     },
     {
         "Date": "2025-10-22",
-        "LSTM_Predicted_Price": 245.91560392594693,
-        "Transformer_Predicted_Price": 248.22713185553584,
-        "TCN_GRU_Predicted_Price": 265.3050975041697
+        "LSTM_Predicted_Price": 238.24003442451067,
+        "Transformer_Predicted_Price": 242.4957580147966,
+        "TCN_GRU_Predicted_Price": 245.9658204043153
     },
     {
         "Date": "2025-10-23",
-        "LSTM_Predicted_Price": 248.69325723024303,
-        "Transformer_Predicted_Price": 240.3367234294201,
-        "TCN_GRU_Predicted_Price": 263.8601000681774
+        "LSTM_Predicted_Price": 236.02161811859332,
+        "Transformer_Predicted_Price": 240.1351364393122,
+        "TCN_GRU_Predicted_Price": 245.75281566439662
     },
     {
         "Date": "2025-10-24",
-        "LSTM_Predicted_Price": 247.7900497447481,
-        "Transformer_Predicted_Price": 243.27073654128253,
-        "TCN_GRU_Predicted_Price": 264.31236189092306
+        "LSTM_Predicted_Price": 239.51589136065013,
+        "Transformer_Predicted_Price": 240.95571090209705,
+        "TCN_GRU_Predicted_Price": 247.2066512730671
     },
     {
         "Date": "2025-10-25",
-        "LSTM_Predicted_Price": 245.74968002240712,
-        "Transformer_Predicted_Price": 246.90684789119769,
-        "TCN_GRU_Predicted_Price": 266.16188841379335
+        "LSTM_Predicted_Price": 236.60968661311927,
+        "Transformer_Predicted_Price": 230.61088034478962,
+        "TCN_GRU_Predicted_Price": 247.6723118404625
     },
     {
         "Date": "2025-10-26",
-        "LSTM_Predicted_Price": 245.8753001820587,
-        "Transformer_Predicted_Price": 250.843599432279,
-        "TCN_GRU_Predicted_Price": 265.3657286080015
+        "LSTM_Predicted_Price": 235.7560319755794,
+        "Transformer_Predicted_Price": 232.87976295311455,
+        "TCN_GRU_Predicted_Price": 249.3632361355485
     },
     {
         "Date": "2025-10-27",
-        "LSTM_Predicted_Price": 244.77937762509828,
-        "Transformer_Predicted_Price": 247.36876155391656,
-        "TCN_GRU_Predicted_Price": 266.8717666198245
+        "LSTM_Predicted_Price": 237.62513235259394,
+        "Transformer_Predicted_Price": 234.8351735388569,
+        "TCN_GRU_Predicted_Price": 248.32029408713424
     },
     {
         "Date": "2025-10-28",
-        "LSTM_Predicted_Price": 246.85990485132788,
-        "Transformer_Predicted_Price": 238.21033533931768,
-        "TCN_GRU_Predicted_Price": 264.9216854732331
+        "LSTM_Predicted_Price": 237.8918606499792,
+        "Transformer_Predicted_Price": 239.35311321172776,
+        "TCN_GRU_Predicted_Price": 250.78991385138943
     },
     {
         "Date": "2025-10-29",
-        "LSTM_Predicted_Price": 245.7195838304906,
-        "Transformer_Predicted_Price": 252.1355713326957,
-        "TCN_GRU_Predicted_Price": 266.0203573421859
+        "LSTM_Predicted_Price": 237.1153648855252,
+        "Transformer_Predicted_Price": 239.34417338615458,
+        "TCN_GRU_Predicted_Price": 252.90763726390287
     },
     {
         "Date": "2025-10-30",
-        "LSTM_Predicted_Price": 244.89679372077262,
-        "Transformer_Predicted_Price": 252.85975181068716,
-        "TCN_GRU_Predicted_Price": 268.1404278643058
+        "LSTM_Predicted_Price": 239.79361818161124,
+        "Transformer_Predicted_Price": 231.7361280112964,
+        "TCN_GRU_Predicted_Price": 251.3871054802148
     },
     {
         "Date": "2025-10-31",
-        "LSTM_Predicted_Price": 245.15859256804652,
-        "Transformer_Predicted_Price": 245.50127675909607,
-        "TCN_GRU_Predicted_Price": 267.2605017867463
+        "LSTM_Predicted_Price": 238.92273252380255,
+        "Transformer_Predicted_Price": 234.56514568439889,
+        "TCN_GRU_Predicted_Price": 251.718696865355
     },
     {
         "Date": "2025-11-01",
-        "LSTM_Predicted_Price": 245.8768210780545,
-        "Transformer_Predicted_Price": 247.85451233656931,
-        "TCN_GRU_Predicted_Price": 266.67837884436085
+        "LSTM_Predicted_Price": 236.95537866951054,
+        "Transformer_Predicted_Price": 238.07113658426533,
+        "TCN_GRU_Predicted_Price": 253.13516569521016
     },
     {
         "Date": "2025-11-02",
-        "LSTM_Predicted_Price": 248.67983239828027,
-        "Transformer_Predicted_Price": 249.90298375488783,
-        "TCN_GRU_Predicted_Price": 266.9874717075036
+        "LSTM_Predicted_Price": 237.07650343555724,
+        "Transformer_Predicted_Price": 241.8670090837113,
+        "TCN_GRU_Predicted_Price": 252.2857694603881
+    },
+    {
+        "Date": "2025-11-03",
+        "LSTM_Predicted_Price": 236.01979913200194,
+        "Transformer_Predicted_Price": 238.51652038640168,
+        "TCN_GRU_Predicted_Price": 253.59008155111223
+    },
+    {
+        "Date": "2025-11-04",
+        "LSTM_Predicted_Price": 238.0258734295494,
+        "Transformer_Predicted_Price": 229.68583400870557,
+        "TCN_GRU_Predicted_Price": 252.0422508678821
+    },
+    {
+        "Date": "2025-11-05",
+        "LSTM_Predicted_Price": 236.92635948807583,
+        "Transformer_Predicted_Price": 243.11274698605848,
+        "TCN_GRU_Predicted_Price": 252.75910079294408
+    },
+    {
+        "Date": "2025-11-06",
+        "LSTM_Predicted_Price": 236.1330134214768,
+        "Transformer_Predicted_Price": 243.81101222641155,
+        "TCN_GRU_Predicted_Price": 254.71421526459017
+    },
+    {
+        "Date": "2025-11-07",
+        "LSTM_Predicted_Price": 236.38544363821347,
+        "Transformer_Predicted_Price": 236.71586466763983,
+        "TCN_GRU_Predicted_Price": 253.58641537658696
+    },
+    {
+        "Date": "2025-11-08",
+        "LSTM_Predicted_Price": 237.07796990536735,
+        "Transformer_Predicted_Price": 238.98488828267728,
+        "TCN_GRU_Predicted_Price": 253.47600712069107
+    },
+    {
+        "Date": "2025-11-09",
+        "LSTM_Predicted_Price": 239.78067376540275,
+        "Transformer_Predicted_Price": 240.96005390884238,
+        "TCN_GRU_Predicted_Price": 253.4764865435136
     }
 ]
