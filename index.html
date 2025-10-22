@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Multi Stock Forecast</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { background-color: #121212; color: white; font-family: Arial, sans-serif; padding: 20px; }
+        h2 { color: #00c853; }
+
+        .stock-menu { margin-bottom: 12px; text-align:center; }
+        .stock-menu a {
+            margin-right: 15px; font-size: 1.1em; text-decoration: none; color: #00c853;
+            padding: 5px 10px; border-radius: 5px; transition: background 0.3s ease;
+        }
+        .stock-menu a:hover { background-color: #2c2c2c; }
+        .stock-menu a.active { background-color: #00c853; color: black; }
+
+        /* Timeframe bar */
+        .tfbar { display:flex; gap:8px; justify-content:center; margin: 6px 0 12px; }
+        .tfbar button {
+          background:#1b1b1b; color:#ddd; border:1px solid #2b2b2b; border-radius:8px;
+          padding:6px 10px; cursor:pointer; font-weight:600;
+        }
+        .tfbar button.active { background:#00c853; color:#111; border-color:#00c853; }
+
+        .result-box {
+            display: block; margin: 20px auto 0 auto; font-size: 1em; background-color: #1e1e1e;
+            padding: 12px 20px; border-radius: 8px; color: #ccc; box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+            line-height: 1.6; text-align: left; max-width: 700px; width: 90%;
+        }
+        .result-box strong { font-weight: 500; color: #ddd; }
+        .result-box .pos { color: #00e676; }
+        .result-box .neg { color: #ef5350; }
+
+        /* Graph 4:3 aspect ratio */
+        #graph { width: min(100%, 1500px); aspect-ratio: 5 / 3; height: auto; margin: 0 auto; }
+
+        .custom-checkbox {
+          display:inline-flex; align-items:center; position:relative; cursor:pointer;
+          margin:10px 20px; font-size:1.1em; user-select:none;
+        }
+
+        .custom-checkbox input {
+          opacity:0; position:absolute; cursor:pointer; height:0; width:0;
+        }
+
+        .checkmark {
+          height:20px; width:20px; background-color:#444; border-radius:4px;
+          display:inline-flex; align-items:center; justify-content:center;
+          margin-right:10px; transition:.3s; box-shadow: inset 0 0 3px #000;
+          position:relative;
+        }
+
+        /* สัญลักษณ์ติ้ก */
+        .checkmark::after {
+          content:"✔";
+          position:absolute;
+          font-size:14px;
+          color:white;
+          opacity:0;                /* ซ่อนตอนยังไม่ติ้ก */
+          transition:opacity .2s ease;
+        }
+
+        /* เมื่อ checkbox ถูกเลือก แสดงติ้ก */
+        input:checked + .checkmark::after {
+          opacity:1;
+        }
+
+        /* LSTM (แดง) */
+        #lstm-checkbox:checked + .checkmark { background-color:#ff5252; box-shadow:0 0 5px #ff5252; }
+        #lstm-checkbox:checked ~ .label-text { color:#ff5252; font-weight:bold; }
+
+        /* Transformer (ฟ้า) */
+        #trans-checkbox:checked + .checkmark { background-color:#40c4ff; box-shadow:0 0 5px #40c4ff; }
+        #trans-checkbox:checked ~ .label-text { color:#40c4ff; font-weight:bold; }
+
+        /* TCN+GRU (เหลือง) */
+        #tcn-checkbox:checked + .checkmark { background-color:#ffd740; box-shadow:0 0 5px #ffd740; }
+        #tcn-checkbox:checked ~ .label-text { color:#ffd740; font-weight:bold; }
+
+        .label-text { transition:.3s; }
+
+        .label-text { transition:.3s; }
+
+        .glow-gradient { font-size:2em; font-weight:bold; background: linear-gradient(90deg, #00e676, #00bfa5);
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px; }
+
+        #latest-date-info { text-align:center; margin-bottom: 8px; font-size:.95em; color:#bbb; min-height:24px; display:flex; align-items:center; justify-content:center; }
+
+        /* Page Switch */
+        .page-switch {
+          position: fixed; top: 16px; right: 16px; z-index: 9999;
+          background: #00c853; color: #111; text-decoration: none; padding: 10px 14px; border-radius: 10px; font-weight: 700;
+          box-shadow: 0 6px 16px rgba(0,0,0,.35); transition: transform .08s ease, filter .2s ease, box-shadow .2s ease;
+        }
+        .page-switch:hover { filter: brightness(1.06); box-shadow: 0 8px 20px rgba(0,0,0,.45); }
+        .page-switch:active { transform: scale(.98); }
+    </style>
+</head>
+<body>
+    <a class="page-switch" href="/trade" title="Go to Trading Simulator" aria-label="Go to Trading Simulator">
+      Trading Simulator ↗
+    </a>
+
+    <h2 style="text-align: center;"><span class="glow-gradient">SmartForecast</span></h2>
+    <p style="text-align: center; color:#ccc; font-size: 1em; margin-top: -10px;">AI-powered stock trend predictions</p>
+    <div id="latest-date-info"></div>
+    <div style="margin-top: 30px; text-align: center; font-size: 0.85em; color: ##fff3cd; line-height: 1.5;">
+      <p>
+        Disclaimer : This platform is for educational and informational purposes only.
+        It does not constitute financial or investment advice.<br>
+        Trading and investing involve risks, and you should conduct your own research
+        or consult a licensed financial advisor before making investment decisions.
+      </p>
+    </div>
+
+    <div class="stock-menu" id="stock-menu">
+        {% for ticker in tickers %}
+          <a href="#" class="stock-link" data-ticker="{{ ticker }}">{{ ticker }}</a>
+        {% endfor %}
+    </div>
+
+    <div class="tfbar" id="tfbar">
+      <span style="color:#bbb; font-weight:1000; margin-right:6px;">Timeframe:</span>
+      <button data-tf="4M" class="active">4M</button>
+      <button data-tf="6M">6M</button>
+      <button data-tf="1Y">1Y</button>
+      <button data-tf="ALL">All</button>
+    </div>
+
+    <div id="graph"></div>
+
+    <div class="checkbox-container" style="text-align: center;">
+        <label class="custom-checkbox">
+            <input type="checkbox" id="lstm-checkbox" checked>
+            <span class="checkmark"></span>
+            <span class="label-text">LSTM</span>
+        </label>
+        <label class="custom-checkbox">
+            <input type="checkbox" id="trans-checkbox" checked>
+            <span class="checkmark"></span>
+            <span class="label-text">Transformer</span>
+        </label>
+        <label class="custom-checkbox">
+            <input type="checkbox" id="tcn-checkbox" checked>
+            <span class="checkmark"></span>
+            <span class="label-text">TCN+GRU</span>
+        </label>
+    </div>
+
+    <div class="result-box" id="prediction-summary"></div>
+
+    <script>
+        let currentFigure;
+        let currentData = null;     // เก็บ data ล่าสุดไว้ใช้คำนวณช่วงเวลา
+        let currentTF = '4M';       // ค่าเริ่มต้น
+
+        // ==== Utilities for timeframe ====
+        function toISODate(d) { return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+        function addMonths(date, m) {
+          const d = new Date(date);
+          const day = d.getDate();
+          d.setMonth(d.getMonth() + m);
+          // แก้กรณีเดือนไม่มีวันเดียวกัน (เช่น 31 → 30/28)
+          if (d.getDate() < day) d.setDate(0);
+          return d;
+        }
+        function applyTimeframe(tf, data) {
+          if (!data) return;
+          // end = ปลายสุดของข้อมูล (เอาอนาคตถ้ามี ไม่งั้นเอาวันล่าสุดของราคาจริง)
+          const lastFuture = (data.future_dates && data.future_dates.length) ? new Date(data.future_dates[data.future_dates.length-1]) : null;
+          const lastActual = (data.actual_dates && data.actual_dates.length) ? new Date(data.actual_dates[data.actual_dates.length-1]) : null;
+          const end = lastFuture && (!lastActual || lastFuture > lastActual) ? lastFuture : lastActual;
+          if (!end) return;
+
+          let start;
+          if (tf === '4M') start = addMonths(end, -4);
+          else if (tf === '6M') start = addMonths(end, -6);
+          else if (tf === '1Y') start = addMonths(end, -12);
+          else { // ALL
+            start = (data.actual_dates && data.actual_dates.length) ? new Date(data.actual_dates[0]) : new Date(data.future_dates[0]);
+          }
+
+          Plotly.relayout('graph', { 'xaxis.range': [toISODate(start), toISODate(end)], 'xaxis.autorange': false });
+        }
+
+        function setTFActive(tf) {
+          currentTF = tf;
+          $('#tfbar button').removeClass('active');
+          $(`#tfbar button[data-tf="${tf}"]`).addClass('active');
+        }
+
+        // ==== Plot ====
+        function loadData(ticker) {
+            $.getJSON(`/data/${ticker}`, function (data) {
+                currentData = data;
+
+                const trace1 = {
+                    x: data.actual_dates, y: data.actual_prices, mode: 'lines', name: 'Actual Prices',
+                    line: { color: 'green' },
+                    hovertemplate: 'Date: %{x}<br>Price: %{y:.2f}<extra></extra>'
+                };
+                const trace2 = {
+                    x: data.future_dates, y: data.lstm_prices, mode: 'lines+markers', name: 'LSTM Prediction',
+                    line: { color: '#ff5252' },
+                    visible: $('#lstm-checkbox').is(':checked') ? true : 'legendonly',
+                    hovertemplate: 'Date: %{x}<br>Price: %{y:.2f}<extra></extra>'
+                };
+                const trace3 = {
+                    x: data.future_dates, y: data.trans_prices, mode: 'lines+markers', name: 'Transformer Prediction',
+                    line: { color: '#40c4ff' },
+                    visible: $('#trans-checkbox').is(':checked') ? true : 'legendonly',
+                    hovertemplate: 'Date: %{x}<br>Price: %{y:.2f}<extra></extra>'
+                };
+                const trace4 = {
+                    x: data.future_dates, y: data.tcn_prices, mode: 'lines+markers', name: 'TCN+GRU Prediction',
+                    line: { color: '#ffd740' },
+                    visible: $('#tcn-checkbox').is(':checked') ? true : 'legendonly',
+                    hovertemplate: 'Date: %{x}<br>Price: %{y:.2f}<extra></extra>'
+                };
+
+                const layout = {
+                    xaxis: { title: 'Date' },
+                    yaxis: { title: 'Price (USD)' },
+                    plot_bgcolor: "#1a1a1a", paper_bgcolor: "#1a1a1a",
+                    font: { color: 'white' },
+                    autosize: true,
+                    showlegend: false
+                };
+
+                Plotly.newPlot('graph', [trace1, trace2, trace3, trace4], layout, { responsive: true }).then(function (figure) {
+                    currentFigure = figure;
+                    applyTimeframe(currentTF, currentData);
+                });
+
+                $('#latest-date-info').text(`📅 Latest update ${data.latest_date}`);
+
+                const current_price = data.lstm_prices[0].toFixed(2);
+                const lstm_future_price = data.lstm_prices[data.lstm_prices.length - 1].toFixed(2);
+                const trans_future_price = data.trans_prices[data.trans_prices.length - 1].toFixed(2);
+                const tcn_future_price = (data.tcn_prices && data.tcn_prices.length ? data.tcn_prices[data.tcn_prices.length - 1].toFixed(2) : '-');
+
+                const lstm_text = `LSTM คาดการณ์ว่าอีก 30 วันจะ
+                    <span class="${data.lstm_return_pct >= 0 ? 'pos' : 'neg'}">
+                    ${data.lstm_return_pct >= 0 ? 'เพิ่มขึ้น📈' : 'ลดลง📉'} ${data.lstm_return_pct.toFixed(2)}%</span>
+                    จากราคา ${current_price} USD → ${lstm_future_price} USD`;
+
+                const trans_text = `Transformer คาดการณ์ว่าอีก 30 วันจะ
+                    <span class="${data.trans_return_pct >= 0 ? 'pos' : 'neg'}">
+                    ${data.trans_return_pct >= 0 ? 'เพิ่มขึ้น📈' : 'ลดลง📉'} ${data.trans_return_pct.toFixed(2)}%</span>
+                    จากราคา ${current_price} USD → ${trans_future_price} USD`;
+
+                const tcn_text = (data.tcn_return_pct == null)
+                  ? `TCN+GRU: (ไม่มีข้อมูล)`
+                  : `TCN+GRU คาดการณ์ว่าอีก 30 วันจะ
+                      <span class="${data.tcn_return_pct >= 0 ? 'pos' : 'neg'}">
+                      ${data.tcn_return_pct >= 0 ? 'เพิ่มขึ้น📈' : 'ลดลง📉'} ${data.tcn_return_pct.toFixed(2)}%</span>
+                      จากราคา ${current_price} USD → ${tcn_future_price} USD`;
+
+                $('#prediction-summary').html(
+                  `<p><strong>${lstm_text}</strong></p>
+                   <p><strong>${trans_text}</strong></p>
+                   <p><strong>${tcn_text}</strong></p>`
+                );
+            }).fail(function(xhr){
+                const msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Load error';
+                $('#latest-date-info').text(`⚠️ ${msg}`);
+                $('#prediction-summary').html('<p class="neg"><strong>Cannot load predictions for this ticker.</strong></p>');
+            });
+        }
+
+        function updateTraceVisibility() {
+            const showLSTM = $('#lstm-checkbox').is(':checked');
+            const showTrans = $('#trans-checkbox').is(':checked');
+            const showTCN = $('#tcn-checkbox').is(':checked');
+
+            Plotly.restyle('graph', { visible: showLSTM ? true : 'legendonly' }, [1]);
+            Plotly.restyle('graph', { visible: showTrans ? true : 'legendonly' }, [2]);
+            Plotly.restyle('graph', { visible: showTCN ? true : 'legendonly' }, [3]);
+        }
+
+        function setActive(ticker) {
+            $(".stock-link").removeClass("active");
+            $(`.stock-link[data-ticker="${ticker}"]`).addClass("active");
+        }
+
+        $(document).ready(function () {
+            const firstTicker = $(".stock-link").first().data("ticker");
+            setActive(firstTicker);
+            loadData(firstTicker);
+
+            // เปลี่ยนหุ้น
+            $(".stock-link").click(function (e) {
+                e.preventDefault();
+                const ticker = $(this).data("ticker");
+                setActive(ticker);
+                loadData(ticker);
+            });
+
+            // ปุ่ม timeframe
+            $('#tfbar button').click(function(){
+              const tf = $(this).data('tf');
+              setTFActive(tf);
+              applyTimeframe(tf, currentData);
+            });
+
+            // Checkbox แสดง/ซ่อนโมเดล
+            $('#lstm-checkbox').change(updateTraceVisibility);
+            $('#trans-checkbox').change(updateTraceVisibility);
+            $('#tcn-checkbox').change(updateTraceVisibility);
+        });
+    </script>
+</body>
+</html>
