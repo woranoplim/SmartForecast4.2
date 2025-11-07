@@ -5,10 +5,50 @@
   <title>SmartForecast — Trading Simulator</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
   <style>
-    body { background: #121212; color: #EEE; font-family: Arial, sans-serif; padding: 20px; }
+    /* Set relative positioning for body to layer particles correctly */
+    body {
+        background-color: #121212;
+        color: #EEE;
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        position: relative;
+        min-height: 100vh;
+        /* เพิ่ม padding ล่างเพื่อไม่ให้ Marquee ทับเนื้อหา */
+        padding-bottom: 60px;
+    }
+
+    /* Particle background container styling */
+    #particles-js {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1; /* Places it behind all other content */
+        background-color: #121212;
+    }
+
     h2 { text-align: center; margin: 0; }
-    .glow-gradient { font-size: 2em; font-weight: bold; background: linear-gradient(90deg,#00e676,#00bfa5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
+
+    /* === Glow gradient แบบเดียวกับหน้า Index === */
+    @keyframes animateGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .glow-gradient {
+      font-size: 2em;
+      font-weight: bold;
+      background: linear-gradient(90deg, #00e676, #00bfa5, #40c4ff, #00e676);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+      background-size: 200% auto;
+      animation: animateGradient 5s ease-in-out infinite;
+    }
+
     p.subtitle { text-align:center; color:#bbb; margin-top:6px; }
 
     .stock-menu { text-align:center; margin: 16px 0 10px; }
@@ -22,14 +62,46 @@
     .panel input, .panel select { background:#101010; border:1px solid #2b2b2b; color:#eee; border-radius:8px; padding:8px 10px; outline:none; }
     .panel .row { grid-column: 1 / -1; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 
-    .btn { background:#00c853; color:#111; border:none; padding:10px 14px; border-radius:10px; font-weight:600; cursor:pointer; box-shadow: 0 0 0 rgba(0,0,0,0); transition: transform .08s ease; }
+    /* === Modern dropdowns (ดีไซน์ใหม่) === */
+    select {
+      background:#101010;
+      border:1px solid #2b2b2b;
+      color:#eee;
+      border-radius:10px;
+      padding:10px 36px 10px 12px;
+      outline:none;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 12px;
+      transition: transform .2s ease, filter .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    select:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+      box-shadow: 0 8px 20px rgba(0,0,0,.45);
+      border-color: #00c853;
+    }
+    select:focus {
+      border-color: #00c853;
+      box-shadow: 0 0 0 3px rgba(0,200,83,.2);
+    }
+
+    /* Buttons */
+    .btn { background:#00c853; color:#111; border:none; padding:10px 14px; border-radius:10px; font-weight:600; cursor:pointer; box-shadow: 0 0 0 rgba(0,0,0,0); transition: transform .2s ease, filter .2s ease, box-shadow .2s ease; }
+    .btn:hover { transform: scale(1.1); filter: brightness(1.2); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
     .btn:active { transform: scale(.98); }
 
     #latest-date-info { text-align:center; font-size:.95em; color:#bbb; margin: 4px 0 14px; min-height: 22px; display:flex; align-items:center; justify-content:center; }
 
     .cards { display:grid; grid-template-columns: 1fr; gap:14px; }
     .card { background:#1a1a1a; border-radius:12px; padding:12px; box-shadow: 0 0 10px rgba(255,255,255,.04); }
-    .card h3 { margin: 6px 0 10px; font-size:1.05em; color:#ddd; }
+
+    /* === เพิ่มขนาดหัวข้อการ์ดให้เด่นชัด === */
+    .card h3 { margin: 6px 0 10px; font-size:1.3em; color:#fff; letter-spacing: .3px; }
 
     #equity-graph, #price-graph { width:100%; height:420px; }
 
@@ -52,41 +124,212 @@
     .pill.open { background:#2b3642; color:#74c0ff; }
     .pill.closed { background:#2b4230; color:#78e08f; }
 
-    .muted { color:#9aa; }
+    .muted { color:#ffffff ; }
     .pos { color:#65ff84; font-weight:700; }
     .neg { color:#ff7b7b; font-weight:700; }
 
     .toolbar { display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-top:8px; }
     .link { color:#00c853; text-decoration:none; }
 
-    .page-switch { position: fixed; top: 16px; right: 16px; z-index: 9999; background: #00c853; color: #111; text-decoration: none; padding: 10px 14px; border-radius: 10px; font-weight: 700; box-shadow: 0 6px 16px rgba(0,0,0,.35); transition: transform .08s ease, filter .2s ease, box-shadow .2s ease; }
-    .page-switch:hover { filter: brightness(1.06); box-shadow: 0 8px 20px rgba(0,0,0,.45); }
+    .page-switch { position: fixed; top: 16px; right: 16px; z-index: 9999; background: #00c853; color: #111; text-decoration: none; padding: 10px 14px; border-radius: 10px; font-weight: 700; box-shadow: 0 6px 16px rgba(0,0,0,.35); transition: transform .2s ease, filter .2s ease, box-shadow .2s ease; }
+    .page-switch:hover { filter: brightness(1.2); box-shadow: 0 8px 20px rgba(0,0,0,.45); transform: scale(1.1); }
     .page-switch:active { transform: scale(.98); }
 
     .history-controls { display:flex; gap:8px; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; }
     .history-sum { display:flex; gap:10px; flex-wrap:wrap; }
     .chip { background:#101010; border:1px solid #2b2b2b; padding:6px 10px; border-radius:999px; }
-    .calc { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    /* === Calculator input (ADD) === */
+    .calc .input-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .calc .input-wrap .prefix {
+      position: absolute;
+      left: 12px;
+      color: #00c853 ;
+      pointer-events: none;
+      font-weight: 600;
+    }
+    .calc input#calcAmount {
+      background: #101010;
+      border: 1px solid #2b2b2b;
+      color: #eee;
+      border-radius: 10px;
+      padding: 10px 14px 10px 28px; /* เผื่อพื้นที่หน้า $ */
+      outline: none;
+      width: 180px;
+      transition: transform .2s ease, filter .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+
+    .calc input#calcAmount:focus {
+      border-color: #00c853;
+      box-shadow: 0 0 0 3px rgba(0,200,83,.2);
+    }
+
+    /* ซ่อนลูกศรของ number input */
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+
+    /* === Footer Marquee (เหมือนหน้า Index) === */
+    @keyframes marquee-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .footer-marquee {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #1a1a1a;
+      border-top: 1px solid #333;
+      z-index: 999;
+      overflow: hidden;
+    }
+    .marquee-content {
+      display: flex;
+      width: 200%;
+      margin: 0;
+      animation: marquee-scroll 50s linear infinite;
+    }
+    .marquee-content span {
+      width: 50%;
+      padding: 10px 0;
+      color: #ccc;
+      font-size: 0.9em;
+      white-space: nowrap;
+    }
+
+    /* === Loading Overlay (ADD) === */
+    #loading-overlay{
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      display: none; align-items: center; justify-content: center; gap: 14px;
+      z-index: 10001;
+    }
+    #loading-overlay.show{ display: flex; }
+    .spinner{
+      width: 42px; height: 42px;
+      border: 3px solid #2b2b2b; border-top-color: #00c853;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    .loading-text{ color:#00c853; font-weight:700; letter-spacing:.3px; }
+    @keyframes spin{ to{ transform: rotate(360deg); } }
+
+    /* === Tutorial / Words Buttons (เหมือน index) === */
+    .tutorial-button {
+      position: fixed; top : 16px; left: 16px; z-index: 9999;
+      background: #40c4ff; color: #111; text-decoration: none; padding: 10px 14px; border-radius: 10px; font-weight: 700;
+      box-shadow: 0 6px 16px rgba(0,0,0,.35);
+      transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+      cursor: pointer;
+    }
+    .tutorial-button:hover {
+      filter: brightness(1.2);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      transform: scale(1.1);
+    }
+    .tutorial-button:active { transform: scale(.98); }
+
+    .glossary-button {
+      position: fixed; top: 16px; left: 140px; z-index: 9999;
+      background: #ffd740; color: #111; text-decoration: none; padding: 10px 14px; border-radius: 10px; font-weight: 700;
+      box-shadow: 0 6px 16px rgba(0,0,0,.35);
+      transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+      cursor: pointer;
+    }
+    .glossary-button:hover {
+      filter: brightness(1.06);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      transform: scale(1.1);
+    }
+    .glossary-button:active { transform: scale(.98); }
+
+    /* === Modal (popup) === */
+    .modal {
+      display: none; position: fixed; z-index: 10000;
+      left: 0; top: 0; width: 100%; height: 100%;
+      overflow: auto; background-color: rgba(0, 0, 0, 0.7);
+      align-items: center; justify-content: center;
+    }
+    @keyframes animatePopup {
+      from { opacity: 0; transform: scale(0.9) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-content {
+      background-color: #2c2c2c; color: white; margin: auto;
+      padding: 20px; border: 1px solid #555; border-radius: 10px;
+      width: 80%; max-width: 900px; position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+      animation: animatePopup 0.3s ease-out;
+    }
+    .close-btn {
+      color: #aaa; position: absolute; top: 10px; right: 20px;
+      font-size: 28px; font-weight: bold; cursor: pointer;
+    }
+    .close-btn:hover, .close-btn:focus { color: #fff; text-decoration: none; }
+
+    /* === Glossary list === */
+    .glossary-list dl { padding: 0 15px; }
+    .glossary-list dt {
+      font-size: 1.1em; font-weight: bold; color: #ffd740;
+      margin-top: 15px; margin-bottom: 5px;
+    }
+    .glossary-list dd {
+      margin-left: 0; color: #ddd; line-height: 1.6;
+      padding-bottom: 10px; border-bottom: 1px solid #333;
+    }
+    .glossary-list dd:last-child { border-bottom: none; }
+    body.modal-open {
+      overflow: hidden;     /* เดสก์ท็อปพอแล้ว แต่เราจะเสริมด้วย position:fixed ใน JS */
+    }
+
+    /* ให้กล่องเนื้อหาเลื่อนภายในโมดัลได้ */
+    .modal-content {
+      max-height: 80vh;
+      overflow: auto;
+    }
+
+    /* กันการส่งสกรอลหลุดออกไปนอกโมดัล (Chrome/Android) */
+    .modal {
+      overscroll-behavior: contain;
+    }
+    .page-container {
+        max-width: 1500px;
+        margin: 0 auto;
+    }
   </style>
 </head>
 <body>
+  <div id="particles-js"></div>
+
+  <!-- Loading overlay (ADD) -->
+  <div id="loading-overlay" aria-live="polite">
+    <div class="spinner" role="progressbar" aria-label="Loading"></div>
+    <div class="loading-text">Loading…</div>
+  </div>
+
+  <!-- Tutorial & Words buttons (ADD) -->
+  <a id="tutorial-btn" class="tutorial-button" title="Show Tutorial">? Tutorial</a>
+  <a id="glossary-btn" class="glossary-button" title="Show Terms">? Words</a>
+
   <a class="page-switch" href="/" title="Back to Multi Stock Forecast" aria-label="Back to Multi Stock Forecast">
     ← Forecast
   </a>
-
+<div class="page-container">
   <h2><span class="glow-gradient">SmartForecast</span></h2>
   <p class="subtitle">Trading Simulator — Powered by AI Forecasts</p>
 
   <div id="latest-date-info"></div>
-    <div style="margin-top: 30px; text-align: center; font-size: 0.85em; color: ##fff3cd; line-height: 1.5;">
-      <p>
-        Disclaimer : This platform is for educational and informational purposes only.
-        It does not constitute financial or investment advice.<br>
-        Trading and investing involve risks, and you should conduct your own research
-        or consult a licensed financial advisor before making investment decisions.
-      </p>
-    </div>
-
 
   <div class="cards">
     <div class="card">
@@ -107,7 +350,10 @@
       <h3>Summary</h3>
       <div class="calc" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <label class="muted">Calculator — Invest:</label>
-        <input id="calcAmount" type="number" value="10000" min="0" step="100" />
+        <span class="input-wrap">
+          <span class="prefix">$</span>
+          <input id="calcAmount" type="number" value="10000" min="0" step="100" inputmode="decimal" aria-label="Investment amount" />
+        </span>
         <button class="btn" id="calcBtn">Compute</button>
         <span id="calcResult" class="chip"></span>
       </div>
@@ -124,8 +370,6 @@
       <div id="price-graph"></div>
     </div>
 
-
-
     <div class="card">
       <h3>Trading History</h3>
         <div>
@@ -137,14 +381,12 @@
             <option value="tcn">TCN+GRU</option>
           </select>
 
-          <!-- 🔹 เพิ่ม Status filter -->
           <select id="histStatus">
             <option value="all">All status</option>
             <option value="open">Open</option>
             <option value="closed">Closed</option>
           </select>
 
-          <!-- 🔹 เพิ่ม Ticker filter -->
           <select id="histTicker">
             <option value="all">All tickers</option>
             {% for ticker in tickers %}
@@ -161,7 +403,6 @@
           <input type="checkbox" id="toggleErrorCol" /> Show Prediction Error %
         </label>
       </div>
-
 
       <div class="table-wrap">
         <table>
@@ -190,11 +431,100 @@
       </div>
     <div id="pagination" style="margin-top:8px; text-align:center;"></div>
     </div>
+
+
+  <!-- Tutorial Modal (ADD) -->
+  <div id="tutorial-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <h3 style="text-align:center; color:#40c4ff;">Trading Simulator — Tutorial</h3>
+      <p style="color:#ccc; margin-top:8px;">
+        • เลือกหุ้นจากเมนูด้านบนของการ์ด <b>Trade Signals</b> เพื่อโหลดสัญญาณซื้อ/ขายและกราฟราคา (ระบบจะแสดงสถานะโหลดสั้นๆ)<br>
+        • กราฟ <b>Portfolio Growth</b> ใช้ตัวเลือก <b>Model</b> เพื่อดูเส้น Equity ของโมเดลรวม หรือแยกรายโมเดล (LSTM/Transformer/TCN+GRU)<br>
+        • กล่อง <b>Summary</b> แสดงสรุปผลสำคัญ (Final Equity, Total Return, Max Drawdown, Win Rate) และมี <b>Calculator — Invest</b> คำนวณทุน×ผลตอบแทนรวม<br>
+        • <b>Trading History</b> ใช้ตัวกรอง Model/Status/Ticker และเปิดคอลัมน์ <i>Pred. Error %</i> เพื่อตรวจสอบความคลาดเคลื่อนของราคาที่คาดไว้กับราคาจริงตอนปิดออเดอร์<br>
+        • กดปุ่ม &larr; <b>Forecast</b> มุมขวาบนเพื่อกลับหน้าแสดงผลคาดการณ์ (มีสถานะโหลดสั้นๆก่อนเปลี่ยนหน้า)
+      </p>
+    </div>
+  </div>
+
+  <!-- Words / Glossary Modal (ADD) -->
+  <div id="glossary-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <h3 style="text-align:center; color:#ffd740;">Words (อธิบายคำที่ควรรู้) — Trading Simulator</h3>
+      <div class="glossary-list">
+        <dl>
+          <dt>Portfolio Growth (Equity Curve)</dt>
+          <dd>กราฟเส้นแสดงมูลค่าพอร์ตสะสมเมื่อทำตามสัญญาณเทรดของโมเดลที่เลือก (All/LSTM/Transformer/TCN+GRU)</dd>
+
+          <dt>Final Equity</dt>
+          <dd>มูลค่าพอร์ตสุดท้ายหลังจำลองครบช่วงเวลา (USD)</dd>
+
+          <dt>Total Return (%)</dt>
+          <dd>ผลตอบแทนรวมคิดเป็นเปอร์เซ็นต์จากเงินตั้งต้นของพอร์ต (All = ผลรวมทุกโมเดล, เลือกโมเดล = พอร์ตย่อยของโมเดลนั้น)</dd>
+
+          <dt>Max Drawdown (%)</dt>
+          <dd>การลดลงสูงสุดจากจุดพีกของมูลค่าพอร์ตถึงจุดต่ำสุดถัดมา เป็นตัวชี้ความเสี่ยงการดิ่งของพอร์ต</dd>
+
+          <dt>Win Rate (%)</dt>
+          <dd>สัดส่วนออเดอร์ที่ปิดกำไรเมื่อเทียบกับจำนวนออเดอร์ทั้งหมด</dd>
+
+          <dt>Calculator — Invest</dt>
+          <dd>เครื่องคิดเลขคูณเงินลงทุนเริ่มต้นกับ <b>Total Return (%)</b> ที่เลือกจากบล็อก Summary เพื่อประมาณการมูลค่าเงินปลายทาง (≈)</dd>
+
+          <dt>Trade Signals (Markers)</dt>
+          <dd>สัญลักษณ์ BUY/EXIT บนกราฟราคาจริง (สีตามโมเดล: LSTM แดง, Transformer ฟ้า, TCN+GRU เหลือง) ใช้ดูจุดเข้า–ออกของแต่ละโมเดล</dd>
+
+          <dt>Open / Closed</dt>
+          <dd>สถานะออเดอร์: <b>Open</b> = ยังถืออยู่, <b>Closed</b> = ปิดแล้ว</dd>
+
+          <dt>Invested</dt>
+          <dd>เม็ดเงินที่ใช้เปิดออเดอร์ (USD)</dd>
+
+          <dt>Net P&L</dt>
+          <dd>กำไร/ขาดทุนสุทธิของออเดอร์ (รวมค่าคอมมิชชัน/ต้นทุนอื่นแล้ว หากระบบคำนวณไว้)</dd>
+
+          <dt>Return %</dt>
+          <dd>กำไร/ขาดทุนของออเดอร์คิดเป็นเปอร์เซ็นต์จากเงินที่ลงทุนในออเดอร์นั้น</dd>
+
+          <dt>Expected Date / Expected Px</dt>
+          <dd>วันที่และราคาที่ <i>คาดหวัง</i> ตามการพยากรณ์ในตอนเปิดออเดอร์ (ใช้เปรียบเทียบกับผลจริงตอนปิด)</dd>
+
+          <dt>Pred. Error %</dt>
+          <dd>ความคลาดเคลื่อนระหว่างราคาที่คาดไว้กับราคาจริงตอนปิดออเดอร์ (เปิดดูได้ด้วยเช็กบ็อกซ์ “Show Prediction Error %”)</dd>
+
+          <dt>Models</dt>
+          <dd><b>LSTM</b> (จำลำดับดี), <b>Transformer</b> (เข้าใจความสัมพันธ์ระยะไกล), <b>TCN+GRU</b> (ลูกผสมมองภาพรวม+ลำดับ)</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+  <!-- Footer Marquee -->
+  <div class="footer-marquee">
+    <div class="marquee-content">
+      <span>
+        ⚠️ <strong>Disclaimer:</strong> This platform is for educational and informational purposes only. It does not constitute financial or investment advice. Trading and investing involve risks, and you should conduct your own research or consult a licensed financial advisor before making investment decisions.
+      </span>
+      <span>
+        ⚠️ <strong>Disclaimer:</strong> This platform is for educational and informational purposes only. It does not constitute financial or investment advice. Trading and investing involve risks, and you should conduct your own research or consult a licensed financial advisor before making investment decisions.
+      </span>
+    </div>
   </div>
 
   <script>
     let currentTicker = null;
     let lastSim = null;
+
+    /* === Loading helpers (ADD) === */
+    function showLoading(msg){
+      $('#loading-overlay .loading-text').text(msg || 'Loading…');
+      $('#loading-overlay').addClass('show');
+    }
+    function hideLoading(){
+      $('#loading-overlay').removeClass('show');
+    }
 
     // ---------- Format helpers ----------
     function fmt(n, d = 2) {
@@ -204,7 +534,6 @@
       if (Math.abs(v) < 1e-8) return "0";
       return v.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
     }
-    // ใช้ใน Summary (Final Equity, Win Rate)
     function fmtPnL(value, prefix = "$") {
       if (value === null || value === undefined || value === '') return "-";
       let v = Number(value);
@@ -221,7 +550,6 @@
       return fmt(v) + "%";
     }
 
-    // ใช้ใน History (Net P&L, Return %)
     function fmtPnLWithSign(value, prefix = "$") {
       if (value === null || value === undefined || value === '') return "-";
       let v = Number(value);
@@ -238,7 +566,6 @@
       return (v > 0 ? "+" : "") + fmt(v) + "%";
     }
 
-
     function pnlClass(value) {
       if (value === null || value === undefined || value === '') return "muted";
       let v = Number(value);
@@ -248,8 +575,7 @@
     function fmtDate(dateStr) {
       if (!dateStr || dateStr === '-') return '-';
       let d = new Date(dateStr);
-      if (isNaN(d)) return dateStr; // กันพังถ้า parse ไม่ได้
-      // dd-mm-yy
+      if (isNaN(d)) return dateStr;
       let dd = String(d.getDate()).padStart(2, '0');
       let mm = String(d.getMonth() + 1).padStart(2, '0');
       let yy = String(d.getFullYear()).slice(-2);
@@ -270,7 +596,7 @@
       $(".stock-link").removeClass("active");
       $(`.stock-link[data-ticker="${ticker}"]`).addClass("active");
     }
-    let lastReturnPct = 0;   // เก็บ %return ล่าสุด
+    let lastReturnPct = 0;
     function loadPerformance(model='all') {
       $.getJSON(`/performance?model=${model}`, function(res){
         lastReturnPct = res.total_return_pct;
@@ -291,11 +617,9 @@
           return;
         }
 
-        // baseline
         let baseline = (model === "all") ? 30000 : 10000;
         let startDate = new Date("2025-08-01");
 
-        // จัดรูปข้อมูลจาก backend
         let raw = res.dates.map((d,i)=>({
           date: new Date(d),
           equity: Number(res.equity[i])
@@ -303,19 +627,16 @@
 
         if (raw.length === 0) return;
 
-        // 🔹 เอา record ล่าสุดต่อวัน
         let latestPerDay = {};
         raw.forEach(r => {
           let key = r.date.toISOString().split("T")[0];
-          latestPerDay[key] = r.equity;  // overwrite → ได้ค่าล่าสุดเสมอ
+          latestPerDay[key] = r.equity;
         });
 
-        // 🔹 หาวันสุดท้าย
         let endDate = new Date(raw[raw.length-1].date);
         endDate.setDate(endDate.getDate());
         if (endDate < startDate) endDate = startDate;
 
-        // 🔹 สร้างช่วงวันจาก startDate → endDate
         let allDays = [];
         let cur = new Date(startDate);
         while(cur <= endDate) {
@@ -323,7 +644,6 @@
           cur.setDate(cur.getDate()+1);
         }
 
-        // 🔹 fill forward equity
         let dates = [], equity = [];
         let lastEquity = baseline;
         allDays.forEach(day => {
@@ -334,7 +654,6 @@
           equity.push(lastEquity);
         });
 
-        // ---------- plot ----------
         const trace = {
           x: dates,
           y: equity,
@@ -347,7 +666,7 @@
 
         const layout = {
           title:'',
-          xaxis:{ title:'Date', type:'date', tickformat:'%b %d, %Y' },
+          xaxis:{ title:'Date', type:'date' },
           yaxis:{ title:'Equity (USD)', tickprefix:'$', tickformat:',.0f' },
           plot_bgcolor:'#1a1a1a',
           paper_bgcolor:'#1a1a1a',
@@ -361,8 +680,6 @@
       });
     }
 
-
-
     function plotPriceWithMarkers(actualDates, actualPrices, ticker) {
       const maxPoints = 60;
       let dates = actualDates;
@@ -373,7 +690,6 @@
         prices = prices.slice(-maxPoints);
       }
 
-      // 🔹 เปลี่ยนเส้นหลักเป็น "Actual Price" สีเขียว
       const priceTrace = {
         x: dates,
         y: prices,
@@ -384,15 +700,12 @@
 
       $.getJSON(`/markers/${ticker}`, function(res) {
         const markers = [];
-
-        // กำหนดสี/สัญลักษณ์ตามโมเดล
         const modelStyles = {
           lstm:  { colorBuy:'#ff5252', colorExit:'#ff5252', symbolBuy:'triangle-up', symbolExit:'triangle-down', offset:0 },
           trans: { colorBuy:'#29b6f6', colorExit:'#29b6f6', symbolBuy:'triangle-up', symbolExit:'triangle-down', offset:-5 },
           tcn:   { colorBuy:'#ffeb3b', colorExit:'#ffeb3b', symbolBuy:'triangle-up', symbolExit:'triangle-down', offset:-10 }
         };
 
-        // วนทุกโมเดลแล้ววาง marker BUY/EXIT
         for (const [model, style] of Object.entries(modelStyles)) {
           if (res[model]) {
             if (res[model].buy && res[model].buy.length) {
@@ -441,34 +754,24 @@
       });
     }
 
-
     function runSim(ticker) {
+      // หมายเหตุ: ไม่โชว์ loading ที่นี่ เพื่อให้แสดงเฉพาะเวลาผู้ใช้ "คลิกเปลี่ยนหุ้น"
       const params = new URLSearchParams({ model: 'lstm' });
-      $.getJSON(`/simulate/${ticker}?${params.toString()}`, function(sim){
+      return $.getJSON(`/simulate/${ticker}?${params.toString()}`, function(sim){
         lastSim = sim;
         $('#latest-date-info').text(`📅 Latest update ${sim.future_dates[0]}`);
-
-        // plot equity curve จาก logs
-        // ✅ ใหม่ → ใช้ model ปัจจุบันจาก dropdown
         const model = $('#equityModel').val() || "all";
         plotEquity(model);
-
-
-
-        // 🔥 โหลดจุดเข้า/ออกจริงจาก CSV แล้วค่อยวาด price graph
         $.getJSON(`/data/${ticker}`, function(data){
           plotPriceWithMarkers(data.actual_dates, data.actual_prices, ticker);
         });
-
         loadHistory($('#histModel').val());
-        loadPerformance('all');   // ✅ refresh performance
+        loadPerformance('all');
       }).fail(function(xhr){
         alert(xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Simulation error');
       });
     }
 
-
-    // ----- History (unchanged) -----
     function paintHistorySums(res) {
       const t = res.totals || {overall_pnl:0, realized_pnl:0, open_pnl:0, invested_usd:0};
       let extra = '';
@@ -530,7 +833,6 @@
 
       $("#history-body").html(body || `<tr><td colspan="15" class="muted">No logs yet</td></tr>`);
 
-      // pagination controls
       const totalPages = Math.ceil(historyData.length / pageSize);
       let html = "";
       if (totalPages > 1) {
@@ -557,9 +859,34 @@
     // ---------- Init ----------
     $(document).ready(function(){
       const firstTicker = $(".stock-link").first().data("ticker");
-      currentTicker = firstTicker; setActive(firstTicker); runSim(firstTicker);
+      currentTicker = firstTicker; setActive(firstTicker); runSim(firstTicker);  // ไม่โชว์ overlay ตอนโหลดครั้งแรก
+
       loadPerformance('all');
-      $(".stock-link").click(function(e){ e.preventDefault(); const t=$(this).data('ticker'); currentTicker=t; setActive(t); runSim(t); });
+
+      // แสดงสถานะโหลดเฉพาะตอน "เปลี่ยนหุ้น"
+      $(".stock-link").click(function(e){
+        e.preventDefault();
+        const t = $(this).data('ticker');
+        currentTicker = t;
+        setActive(t);
+        showLoading('Switching to ' + t + ' …');
+        runSim(t).always(function(){
+          hideLoading();
+        });
+      });
+
+      // แสดงสถานะโหลดตอน "กดสลับหน้า"
+      $('.page-switch').on('click', function(){
+        showLoading('Opening page …');
+        // ไม่ต้อง hide; จะเปลี่ยนหน้าไปเลย
+      });
+
+      // Modal handlers (ADD)
+      $('#tutorial-btn').click(function(){ $('#tutorial-modal').css('display','flex'); });
+      $('#glossary-btn').click(function(){ $('#glossary-modal').css('display','flex'); });
+      $('.close-btn').click(function(){ $(this).closest('.modal').css('display','none'); });
+      $('.modal').click(function(e){ if(e.target === this){ $(this).css('display','none'); } });
+
       $('#resetHistory').click(function(){
         $('#histModel').val('all');
         $('#histStatus').val('all');
@@ -569,7 +896,7 @@
       $('#equityModel').change(function(){
         const model = $(this).val();
         plotEquity(model);
-        loadPerformance(model);   // ✅ optional: sync performance panel ด้วย
+        loadPerformance(model);
       });
       $('#histModel').change(function(){ loadHistory(); });
       $('#histStatus').change(function(){ loadHistory(); });
@@ -577,11 +904,11 @@
       $('#calcBtn').click(function(){
         let amt = Number($('#calcAmount').val());
         if (!Number.isFinite(amt) || amt <= 0) {
-          $('#calcResult').text('Invalid amount').show();  // แสดงข้อความ error
+          $('#calcResult').text('Invalid amount').show();
           return;
         }
         let result = amt * (1 + lastReturnPct/100.0);
-        $('#calcResult').text(`≈ ${fmtPnL(result)}`).show();  // 🔹 ค่อย show ตอนคำนวณแล้ว
+        $('#calcResult').text(`≈ ${fmtPnL(result)}`).show();
       });
       $('#toggleErrorCol').change(function(){
         if(this.checked){
@@ -592,6 +919,79 @@
       });
     });
   </script>
+
+  <script>
+    particlesJS("particles-js", {
+      "particles": {
+        "number": { "value": 60, "density": { "enable": true, "value_area": 800 } },
+        "color": { "value": "#4CAF50" },
+        "shape": { "type": "circle" },
+        "opacity": { "value": 0.4, "random": false, "anim": { "enable": false } },
+        "size": { "value": 3, "random": true },
+        "line_linked": { "enable": true, "distance": 150, "color": "#4CAF50", "opacity": 0.3, "width": 1 },
+        "move": { "enable": true, "speed": 1.5, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": { "enable": true, "mode": "grab" },
+          "onclick": { "enable": false },
+          "resize": true
+        },
+        "modes": {
+          "grab": { "distance": 140, "line_opacity": 0.5 },
+          "bubble": { "distance": 400, "size": 40, "duration": 2, "opacity": 8, "speed": 3 },
+          "repulse": { "distance": 200, "duration": 0.4 },
+          "push": { "particles_nb": 4 },
+          "remove": { "particles_nb": 2 }
+        }
+      },
+      "retina_detect": true
+    });
+      // ===== Scroll Lock helpers =====
+      const __scrollLock = { y: 0 };
+      function lockBodyScroll() {
+        __scrollLock.y = window.scrollY || document.documentElement.scrollTop || 0;
+        document.body.classList.add('modal-open');
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${__scrollLock.y}px`;
+        document.body.style.width = '100%';
+      }
+      function unlockBodyScroll() {
+        document.body.classList.remove('modal-open');
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, __scrollLock.y);
+      }
+
+      // ===== Open / Close helpers =====
+      function openModal(sel) {
+        lockBodyScroll();
+        $(sel).css('display','flex');
+      }
+      function closeModal(elOrSel) {
+        const $m = (elOrSel instanceof HTMLElement) ? $(elOrSel) : $(elOrSel);
+        $m.css('display','none');
+        unlockBodyScroll();
+      }
+
+      // ===== Hook ปุ่มและพื้นหลัง =====
+      // (แทนที่โค้ดเดิมที่ใช้ .css('display','flex') / .css('display','none'))
+      $('#tutorial-btn').off('click').on('click', function(){ openModal('#tutorial-modal'); });
+      $('#glossary-btn').off('click').on('click', function(){ openModal('#glossary-modal'); });
+
+      $('.close-btn').off('click').on('click', function(){ closeModal($(this).closest('.modal')[0]); });
+
+      // คลิกพื้นหลังเพื่อปิด
+      $('.modal').off('click').on('click', function(e){
+        if (e.target === this) closeModal(this);
+      });
+
+      // กันสกรอลหลุดไปพื้นหลัง (iOS บางกรณี)
+      $('.modal').on('wheel touchmove', function(e){
+        if (e.target === this) e.preventDefault();
+      });
+  </script>
 </body>
 </html>
-

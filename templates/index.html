@@ -5,23 +5,106 @@
     <title>Multi Stock Forecast</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <style>
-        body { background-color: #121212; color: white; font-family: Arial, sans-serif; padding: 20px; }
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            /* NEW: ปรับ padding-bottom เพื่อไม่ให้ Marquee ทับเนื้อหา */
+            padding-bottom: 60px;
+        }
         h2 { color: #00c853; }
+
+        /* --- Splash Screen --- */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #121212; /* สีเดียวกับ body */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100000; /* ให้อยู่เหนือสุด */
+            /* ⬇️ MODIFIED: เปลี่ยน Animation การออก */
+            transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
+        }
+
+        /* ⬇️ MODIFIED: เปลี่ยนเป็นสีขาวสว่าง, ขนาดใหญ่, และเพิ่ม animation */
+        .splash-loading-text {
+            margin-top: 20px;
+            font-size: 2.2em; /* ⬅️ เพิ่มขนาด */
+            color: #FFF; /* ⬅️ เปลี่ยนเป็นสีขาวสว่าง */
+            letter-spacing: 1px;
+
+            width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 3px solid #FFF; /* ⬅️ เปลี่ยนสีตัวกระพริบเป็นขาวด้วย */
+
+            animation:
+                typing 1.2s steps(24, end) 0.5s forwards,
+                blink-caret 0.75s step-end 0.5s infinite;
+        }
+
+        /* ⬇️ MODIFIED: เปลี่ยนจาก fade-out เป็น slide-up (splash-exit) */
+        #splash-screen.splash-exit {
+            transform: translateY(-100%);
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* ⬇️ MODIFIED: เพิ่มขนาด font-size */
+        #splash-screen .glow-gradient {
+            font-size: 5.0em; /* ⬅️ เพิ่มขนาดตรงนี้ */
+        }
+
+        /* --- ⭐️ NEW: Matrix Splash Screen CSS ⭐️ --- */
+        #matrix-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* อยู่ใต้ตัวหนังสือ */
+            background-color: #121212;
+        }
+        #splash-screen .glow-gradient,
+        #splash-screen .splash-loading-text {
+            position: relative;
+            z-index: 2; /* ให้ลอยอยู่เหนือ canvas */
+        }
+        /* --- ⭐️ END NEW CSS ⭐️ --- */
+
 
         .stock-menu { margin-bottom: 12px; text-align:center; }
         .stock-menu a {
             margin-right: 15px; font-size: 1.1em; text-decoration: none; color: #00c853;
-            padding: 5px 10px; border-radius: 5px; transition: background 0.3s ease;
+            padding: 5px 10px; border-radius: 5px;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            display: inline-block;
         }
-        .stock-menu a:hover { background-color: #2c2c2c; }
+        .stock-menu a:hover {
+            background-color: #2c2c2c;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
         .stock-menu a.active { background-color: #00c853; color: black; }
 
         /* Timeframe bar */
         .tfbar { display:flex; gap:8px; justify-content:center; margin: 6px 0 12px; }
         .tfbar button {
-          background:#1b1b1b; color:#ddd; border:1px solid #2b2b2b; border-radius:8px;
-          padding:6px 10px; cursor:pointer; font-weight:600;
+             background:#1b1b1b; color:#ddd; border:1px solid #2b2b2b; border-radius:8px;
+            padding:6px 10px; cursor:pointer; font-weight:600;
+            transition: transform 0.2s ease, background 0.3s ease, color 0.3s ease, box-shadow 0.2s ease;
+        }
+        .tfbar button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
         }
         .tfbar button.active { background:#00c853; color:#111; border-color:#00c853; }
 
@@ -31,61 +114,63 @@
             line-height: 1.6; text-align: left; max-width: 700px; width: 90%;
         }
         .result-box strong { font-weight: 500; color: #ddd; }
-        .result-box .pos { color: #00e676; }
-        .result-box .neg { color: #ef5350; }
+        .pos { color: #00e676; }
+        .neg { color: #ef5350; }
 
-        /* Graph 4:3 aspect ratio */
-        #graph { width: min(100%, 1500px); aspect-ratio: 5 / 3; height: auto; margin: 0 auto; }
+        #graph {
+            width: min(100%, 1500px);
+            aspect-ratio: 5 / 2;
+            height: auto;
+            margin: 0 auto;
+            border-radius: 8px;
+            overflow: hidden;
+        }
 
         .custom-checkbox {
-          display:inline-flex; align-items:center; position:relative; cursor:pointer;
-          margin:10px 20px; font-size:1.1em; user-select:none;
+          display:inline-flex; align-items:center; position:absolute;
+          cursor:pointer;
+          margin: 0;
+          font-size: 1.2em;
+          user-select:none;
+          width: auto;
+          top: 20px;
+          left: 20px;
+          z-index: 2;
         }
-
-        .custom-checkbox input {
-          opacity:0; position:absolute; cursor:pointer; height:0; width:0;
-        }
-
+        .custom-checkbox input { opacity:0; position:absolute; cursor:pointer; height:0; width:0; }
         .checkmark {
           height:20px; width:20px; background-color:#444; border-radius:4px;
           display:inline-flex; align-items:center; justify-content:center;
           margin-right:10px; transition:.3s; box-shadow: inset 0 0 3px #000;
           position:relative;
         }
-
-        /* สัญลักษณ์ติ้ก */
         .checkmark::after {
-          content:"✔";
-          position:absolute;
-          font-size:14px;
-          color:white;
-          opacity:0;                /* ซ่อนตอนยังไม่ติ้ก */
-          transition:opacity .2s ease;
+          content:"✔"; position:absolute; font-size:14px; color:white;
+          opacity:0; transition:opacity .2s ease;
         }
+        input:checked + .checkmark::after { opacity:1; }
 
-        /* เมื่อ checkbox ถูกเลือก แสดงติ้ก */
-        input:checked + .checkmark::after {
-          opacity:1;
-        }
-
-        /* LSTM (แดง) */
         #lstm-checkbox:checked + .checkmark { background-color:#ff5252; box-shadow:0 0 5px #ff5252; }
-        #lstm-checkbox:checked ~ .label-text { color:#ff5252; font-weight:bold; }
-
-        /* Transformer (ฟ้า) */
         #trans-checkbox:checked + .checkmark { background-color:#40c4ff; box-shadow:0 0 5px #40c4ff; }
-        #trans-checkbox:checked ~ .label-text { color:#40c4ff; font-weight:bold; }
-
-        /* TCN+GRU (เหลือง) */
         #tcn-checkbox:checked + .checkmark { background-color:#ffd740; box-shadow:0 0 5px #ffd740; }
-        #tcn-checkbox:checked ~ .label-text { color:#ffd740; font-weight:bold; }
 
-        .label-text { transition:.3s; }
 
-        .label-text { transition:.3s; }
+        @keyframes animateGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
 
-        .glow-gradient { font-size:2em; font-weight:bold; background: linear-gradient(90deg, #00e676, #00bfa5);
-            -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px; }
+        .glow-gradient {
+            font-size:2em;
+            font-weight:bold;
+            background: linear-gradient(90deg, #00e676, #00bfa5, #40c4ff, #00e676);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            letter-spacing:1px;
+            background-size: 200% auto;
+            animation: animateGradient 5s ease-in-out infinite;
+        }
 
         #latest-date-info { text-align:center; margin-bottom: 8px; font-size:.95em; color:#bbb; min-height:24px; display:flex; align-items:center; justify-content:center; }
 
@@ -93,28 +178,312 @@
         .page-switch {
           position: fixed; top: 16px; right: 16px; z-index: 9999;
           background: #00c853; color: #111; text-decoration: none; padding: 10px 14px; border-radius: 10px; font-weight: 700;
-          box-shadow: 0 6px 16px rgba(0,0,0,.35); transition: transform .08s ease, filter .2s ease, box-shadow .2s ease;
+          box-shadow: 0 6px 16px rgba(0,0,0,.35);
+          transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
         }
-        .page-switch:hover { filter: brightness(1.06); box-shadow: 0 8px 20px rgba(0,0,0,.45); }
+        .page-switch:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transform: scale(1.1);
+        }
         .page-switch:active { transform: scale(.98); }
+
+
+        /* Tutorial Button */
+        .tutorial-button {
+          position: fixed; top : 16px; left: 16px; z-index: 9999;
+          background: #40c4ff; color: #111; text-decoration: none; padding: 10px 14px; border-radius: 10px; font-weight: 700;
+          box-shadow: 0 6px 16px rgba(0,0,0,.35);
+          transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+          cursor: pointer;
+        }
+        .tutorial-button:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transform: scale(1.1);
+        }
+        .tutorial-button:active { transform: scale(.98); }
+
+        /* ⭐️ 1. เพิ่ม CSS สำหรับปุ่ม Glossary ใหม่ ⭐️ */
+        .glossary-button {
+          position: fixed;
+          top: 16px;
+          left: 140px; /* ⬅️ ขยับตำแหน่งไปทางขวาจากปุ่ม Tutorial */
+          z-index: 9999;
+          background: #ffd740; /* ⬅️ ใช้สีเหลืองจากธีม TCN */
+          color: #111;
+          text-decoration: none;
+          padding: 10px 14px;
+          border-radius: 10px;
+          font-weight: 700;
+          box-shadow: 0 6px 16px rgba(0,0,0,.35);
+          transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+          cursor: pointer;
+        }
+        .glossary-button:hover {
+            filter: brightness(1.06);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transform: scale(1.1); /* ⬅️ ใช้เอฟเฟกต์ขยายเหมือนกัน */
+        }
+        .glossary-button:active { transform: scale(.98); }
+
+
+        /* Modal (Popup) */
+        .modal {
+          display: none; position: fixed; z-index: 10000;
+          left: 0; top: 0; width: 100%; height: 100%;
+          overflow: auto; background-color: rgba(0, 0, 0, 0.7);
+          align-items: center; justify-content: center;
+        }
+
+        @keyframes animatePopup {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .modal-content {
+          background-color: #2c2c2c; color: white; margin: auto;
+          padding: 20px; border: 1px solid #555; border-radius: 10px;
+          width: 80%; max-width: 900px; position: relative;
+          box-shadow: 0 10px 30px rgba(0,0,0,.5);
+          animation: animatePopup 0.3s ease-out;
+        }
+        .modal-content img { width: 100%; height: auto; border-radius: 5px; }
+
+        /* ⭐️ 2. เพิ่ม CSS สำหรับ List คำศัพท์ใน Modal ⭐️ */
+        .glossary-list dl {
+            padding: 0 15px;
+        }
+        .glossary-list dt {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #ffd740; /* ⬅️ สีเดียวกับปุ่ม */
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+        .glossary-list dd {
+            margin-left: 0;
+            color: #ddd;
+            line-height: 1.6;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        .glossary-list dd:last-child {
+            border-bottom: none;
+        }
+
+        .close-btn {
+          color: #aaa; position: absolute; top: 10px; right: 20px;
+          font-size: 28px; font-weight: bold;
+        }
+        .close-btn:hover,
+        .close-btn:focus { color: #fff; text-decoration: none; cursor: pointer; }
+
+
+        /* Prediction Cards */
+        .prediction-card-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .prediction-card {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 220px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-bottom: 4px solid #555;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+        .prediction-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        .card-lstm { border-color: #ff5252; }
+        .card-trans { border-color: #40c4ff; }
+        .card-tcn { border-color: #ffd740; }
+
+        .card-model-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #eee;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .card-model-name.active-lstm { color: #ff5252; }
+        .card-model-name.active-trans { color: #40c4ff; }
+        .card-model-name.active-tcn { color: #ffd740; }
+
+
+        .prediction-card .price {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .prediction-card .pct {
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+        .prediction-card .card-subtitle {
+            font-size: 0.85em;
+            color: #aaa;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+
+        /* Flashing animations */
+        @keyframes flash-green {
+            0%, 100% { color: #00e676; }
+            50% { color: white; }
+        }
+        @keyframes flash-red {
+            0%, 100% { color: #ef5350; }
+            50% { color: white; }
+        }
+        .flash-pos {
+            animation: flash-green 1.5s infinite ease-in-out;
+        }
+        .flash-neg {
+            animation: flash-red 1.5s infinite ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; }
+        }
+        /* ซ่อนทุกอย่างไว้ก่อน */
+        .stock-menu, .tfbar, #graph, #prediction-summary, .page-switch, .tutorial-button, .glossary-button {
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        /* Footer Marquee (CSS) */
+        @keyframes marquee-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .footer-marquee {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #1a1a1a;
+            border-top: 1px solid #333;
+            z-index: 999;
+            overflow: hidden;
+        }
+        .marquee-content {
+            display: flex;
+            width: 200%;
+            margin: 0;
+            animation: marquee-scroll 50s linear infinite;
+        }
+        .marquee-content span {
+            width: 50%;
+            padding: 10px 0;
+            color: #ccc;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+        .disclaimer-box { display: none; }
+
+
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-color: #121212;
+        }
+
+        /* --- ⭐️ NEW: Keyframes for Typing ⭐️ --- */
+
+        /* Keyframe 1: สำหรับการขยายความกว้าง (การพิมพ์) */
+        @keyframes typing {
+            from { width: 0; }
+            /* ⬇️ MODIFIED: ปรับความกว้างให้รองรับ font-size ใหม่ */
+            to { width: 410px; } /* ⬅️ **คุณอาจจะต้องปรับเลขนี้** */
+        }
+
+        /* Keyframe 2: สำหรับการกระพริบของ Caret (ขีดท้าย) */
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            /* ⬇️ MODIFIED: เปลี่ยนเป็นสีขาว */
+            50% { border-color: #FFF; }
+        }
+
+        /* === Loading Overlay (ADD) === */
+        #loading-overlay{
+          position: fixed; inset: 0;
+          background: rgba(0,0,0,.55);
+          display: none; align-items: center; justify-content: center; gap: 14px;
+          z-index: 100001;
+        }
+        #loading-overlay.show{ display: flex; }
+        .spinner{
+          width: 42px; height: 42px;
+          border: 3px solid #2b2b2b; border-top-color: #00c853;
+          border-radius: 50%;
+          animation: spin .8s linear infinite;
+        }
+        .loading-text{ color:#00c853; font-weight:700; letter-spacing:.3px; }
+        @keyframes spin{ to{ transform: rotate(360deg); } }
+    body.modal-open {
+    overflow: hidden;     /* เดสก์ท็อปพอแล้ว แต่เราจะเสริมด้วย position:fixed ใน JS */
+    }
+
+    /* ให้กล่องเนื้อหาเลื่อนภายในโมดัลได้ */
+    .modal-content {
+      max-height: 80vh;
+      overflow: auto;
+    }
+
+    /* กันการส่งสกรอลหลุดออกไปนอกโมดัล (Chrome/Android) */
+    .modal {
+      overscroll-behavior: contain;
+    }
     </style>
 </head>
 <body>
+    <div id="particles-js"></div>
+
+    <!-- Loading overlay (ADD) -->
+    <div id="loading-overlay" aria-live="polite">
+      <div class="spinner" role="progressbar" aria-label="Loading"></div>
+      <div class="loading-text">Loading…</div>
+    </div>
+
+    <div id="splash-screen">
+        <span class="glow-gradient">SmartForecast</span>
+        <span class="splash-loading-text">Initializing AI Models...</span>
+    </div>
+
+    <a id="tutorial-btn" class="tutorial-button" title="Show Tutorial">? Tutorial</a>
+
+    <a id="glossary-btn" class="glossary-button" title="Show Terms">? Words</a>
+
     <a class="page-switch" href="/trade" title="Go to Trading Simulator" aria-label="Go to Trading Simulator">
       Trading Simulator ↗
     </a>
 
     <h2 style="text-align: center;"><span class="glow-gradient">SmartForecast</span></h2>
-    <p style="text-align: center; color:#ccc; font-size: 1em; margin-top: -10px;">AI-powered stock trend predictions</p>
+    <p style="text-align: center; color:#ccc; font-size: 1.0em; margin-top: -10px;">AI-powered stock trend predictions</p>
     <div id="latest-date-info"></div>
-    <div style="margin-top: 30px; text-align: center; font-size: 0.85em; color: ##fff3cd; line-height: 1.5;">
-      <p>
-        Disclaimer : This platform is for educational and informational purposes only.
-        It does not constitute financial or investment advice.<br>
-        Trading and investing involve risks, and you should conduct your own research
-        or consult a licensed financial advisor before making investment decisions.
-      </p>
-    </div>
+
+    <div class="disclaimer-box"></div>
 
     <div class="stock-menu" id="stock-menu">
         {% for ticker in tickers %}
@@ -132,30 +501,112 @@
 
     <div id="graph"></div>
 
-    <div class="checkbox-container" style="text-align: center;">
-        <label class="custom-checkbox">
-            <input type="checkbox" id="lstm-checkbox" checked>
-            <span class="checkmark"></span>
-            <span class="label-text">LSTM</span>
-        </label>
-        <label class="custom-checkbox">
-            <input type="checkbox" id="trans-checkbox" checked>
-            <span class="checkmark"></span>
-            <span class="label-text">Transformer</span>
-        </label>
-        <label class="custom-checkbox">
-            <input type="checkbox" id="tcn-checkbox" checked>
-            <span class="checkmark"></span>
-            <span class="label-text">TCN+GRU</span>
-        </label>
+    <div class="result-box" id="prediction-summary"></div>
+
+    <div id="tutorial-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h3 style="text-align: center; color: #40c4ff;">Website Tutorial</h3>
+        <img src="/static/tutorial/tutorial1.png" alt="Tutorial Image">
+        <img src="/static/tutorial/tutorial2.png" alt="Tutorial Image">
+        <img src="/static/tutorial/tutorial3.png" alt="Tutorial Image">
+        <img src="/static/tutorial/tutorial4.png" alt="Tutorial Image">
+        <img src="/static/tutorial/tutorial5.png" alt="Tutorial Image">
+        <img src="/static/tutorial/tutorial6.png" alt="Tutorial Image">
+        <p style="text-align: center; margin-top: 15px; color: #ccc;">คำอธิบายพร้อมภาพประกอบของเว็บไซต์ส่วนต่างๆ</p>
+      </div>
     </div>
 
-    <div class="result-box" id="prediction-summary"></div>
+   <div id="glossary-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h3 style="text-align: center; color: #ffd740;">Words (อธิบายคำที่ควรรู้)</h3>
+
+        <div class="glossary-list">
+            <dl>
+                <dt>LSTM (Long Short-Term Memory)</dt>
+                <dd>โมเดล AI ประเภทหนึ่ง (สีแดง) ที่เก่งกาจในการจดจำรูปแบบจากข้อมูลในอดีต (เช่น ราคาหุ้น) เพื่อทำนายอนาคต</dd>
+
+                <dt>Transformer</dt>
+                <dd>โมเดล AI ที่ทันสมัยมาก (สีฟ้า) (เป็นเทคโนโลยีเดียวกับ ChatGPT) ที่เก่งในการมองภาพรวมและหาความสัมพันธ์ที่ซับซ้อนของข้อมูล</dd>
+
+                <dt>TCN+GRU</dt>
+                <dd>
+                    นี่คือโมเดล AI ลูกผสม (Hybrid) (สีเหลือง) ที่รวมจุดแข็งของ AI สองตัวเข้าด้วยกัน:<br>
+                    <strong>TCN:</strong> เก่งในการ "สแกน" ข้อมูลย้อนหลังเพื่อหารูปแบบสำคัญๆ (เหมือนการมองภาพกว้าง)<br>
+                    <strong>GRU:</strong> เก่งในการจดจำ "ลำดับ" ของข้อมูล (คล้าย LSTM, ช่วยจำว่าอะไรเกิดก่อน-หลัง)<br>
+                    เมื่อรวมกัน มันจึงเก่งทั้งการมองภาพกว้างและเข้าใจลำดับของข้อมูลครับ
+                </dd>
+
+                <hr style="border-color: #444; margin: 15px 0;">
+
+                <dt>กราฟราคา (Price Chart)</dt>
+                <dd>พื้นที่แสดงผลหลัก: <strong>เส้นสีเขียว</strong> คือราคาจริงในอดีต (Actual Prices) ส่วนเส้นสีอื่นๆ (แดง, ฟ้า, เหลือง) คือเส้นที่ AI ทำนายอนาคต (Forecast)</dd>
+
+                <dt>การ์ดทำนายผล (Prediction Cards)</dt>
+                <dd>
+                    กล่องสรุปผลการทำนาย 30 วันข้างหน้าจาก AI แต่ละโมเดล แสดงราคาเป้าหมายและเปอร์เซ็นต์กำไร/ขาดทุน (เช่น 📈 +5.20%)<br>
+                    <strong>คุณสามารถติ๊กถูก ✔️</strong> ในการ์ดเพื่อเปิด/ปิดการแสดงผลเส้นกราฟนั้นๆ ได้
+                </dd>
+
+                <dt>Timeframe (4M, 6M, 1Y, All)</dt>
+                <dd>ปุ่มสำหรับปรับกรอบเวลาของข้อมูลที่จะแสดงบนกราฟ เช่น 4M คือการซูมกราฟให้เห็นข้อมูลย้อนหลัง 4 เดือน</dd>
+
+                <dt>Trading Simulator ↗ (ปุ่มขวาบน)</dt>
+                <dd>ปุ่มสำหรับข้ามไปหน้า "ห้องซ้อมเทรด" ซึ่งคุณสามารถใช้ข้อมูลทำนายจาก AI นี้ไปลองซื้อ-ขายหุ้นจำลองได้</dd>
+
+                <dt>⚠️ Disclaimer (แถบวิ่งด้านล่าง)</dt>
+                <dd>ข้อจำกัดความรับผิดชอบ: เว็บไซต์นี้จัดทำเพื่อการศึกษาเท่านั้น ไม่ใช่คำแนะนำในการลงทุน การลงทุนมีความเสี่ยง โปรดศึกษาข้อมูลด้วยตนเอง</dd>
+
+                <hr style="border-color: #444; margin: 15px 0;">
+
+                <dt>รายชื่อหุ้น (Stock Menu)</dt>
+                <dd>
+                    เมนูที่แสดงรายชื่อหุ้นทั้งหมดที่คุณสามารถคลิกเพื่อดูการวิเคราะห์ได้ หุ้นเด่นๆ ที่มีในระบบ ได้แก่:
+                   <ul style="margin-top: 10px; padding-left: 20px; color: #ccc;">
+                        <li><strong>AAPL (Apple)</strong>: เจ้าของผลิตภัณฑ์อย่าง iPhone, Mac, iPad และมีธุรกิจบริการ (Services) ที่แข็งแกร่งเช่น iCloud, App Store</li>
+                        <li><strong>AMZN (Amazon)</strong>: ยักษ์ใหญ่ด้าน E-commerce และเป็นผู้นำตลาด Cloud Computing (Amazon Web Services - AWS) ที่ทำกำไรมหาศาล</li>
+                        <li><strong>GOOGL (Alphabet)</strong>: บริษัทแม่ของ Google ธุรกิจหลักคือการโฆษณา (Google Search, YouTube), ระบบ Android และบริการ Cloud</li>
+                        <li><strong>META (Meta)</strong>: เจ้าของแพลตฟอร์มโซเชียลมีเดียขนาดใหญ่ (Facebook, Instagram, WhatsApp) และกำลังลงทุนอย่างหนักใน Metaverse (Reality Labs)</li>
+                        <li><strong>MSFT (Microsoft)</strong>: ยักษ์ใหญ่ด้านซอฟต์แวร์ (Windows, Microsoft 365) และเป็นผู้ให้บริการ Cloud Computing รายใหญ่ (Azure) รวมถึงการลงทุนใน AI (OpenAI)</li>
+                        <li><strong>NVDA (NVIDIA)</strong>: ผู้นำด้านชิปประมวลผล (GPU) ที่จำเป็นต่อ AI, การเล่นเกม (GeForce) และศูนย์ข้อมูล (Data Center)</li>
+                        <li><strong>TSLA (Tesla)</strong>: ผู้นำด้านรถยนต์ไฟฟ้า (EV) และธุรกิจพลังงานสะอาด เช่น ระบบเก็บพลังงาน และสถานีชาร์จ Supercharger</li>
+                    </ul>
+                </dd>
+
+            </dl>
+        </div>
+
+      </div>
+    </div>
+
+      </div>
+    </div>
+
+
+    <div class="footer-marquee">
+        <div class="marquee-content">
+            <span>
+                ⚠️ <strong>Disclaimer:</strong> This platform is for educational and informational purposes only. It does not constitute financial or investment advice. Trading and investing involve risks, and you should conduct your own research or consult a licensed financial advisor before making investment decisions.
+            </span>
+            <span>
+                ⚠️ <strong>Disclaimer:</strong> This platform is for educational and informational purposes only. It does not constitute financial or investment advice. Trading and investing involve risks, and you should conduct your own research or consult a licensed financial advisor before making investment decisions.
+            </span>
+        </div>
+    </div>
+
 
     <script>
         let currentFigure;
-        let currentData = null;     // เก็บ data ล่าสุดไว้ใช้คำนวณช่วงเวลา
-        let currentTF = '4M';       // ค่าเริ่มต้น
+        let currentData = null;
+        let currentTF = '4M';
+
+        /* === Loading helpers (ADD) === */
+        function showLoading(msg){
+          $('#loading-overlay .loading-text').text(msg || 'Loading…');
+          $('#loading-overlay').addClass('show');
+        }
+        function hideLoading(){ $('#loading-overlay').removeClass('show'); }
 
         // ==== Utilities for timeframe ====
         function toISODate(d) { return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
@@ -163,13 +614,11 @@
           const d = new Date(date);
           const day = d.getDate();
           d.setMonth(d.getMonth() + m);
-          // แก้กรณีเดือนไม่มีวันเดียวกัน (เช่น 31 → 30/28)
           if (d.getDate() < day) d.setDate(0);
           return d;
         }
         function applyTimeframe(tf, data) {
           if (!data) return;
-          // end = ปลายสุดของข้อมูล (เอาอนาคตถ้ามี ไม่งั้นเอาวันล่าสุดของราคาจริง)
           const lastFuture = (data.future_dates && data.future_dates.length) ? new Date(data.future_dates[data.future_dates.length-1]) : null;
           const lastActual = (data.actual_dates && data.actual_dates.length) ? new Date(data.actual_dates[data.actual_dates.length-1]) : null;
           const end = lastFuture && (!lastActual || lastFuture > lastActual) ? lastFuture : lastActual;
@@ -179,7 +628,7 @@
           if (tf === '4M') start = addMonths(end, -4);
           else if (tf === '6M') start = addMonths(end, -6);
           else if (tf === '1Y') start = addMonths(end, -12);
-          else { // ALL
+          else {
             start = (data.actual_dates && data.actual_dates.length) ? new Date(data.actual_dates[0]) : new Date(data.future_dates[0]);
           }
 
@@ -193,9 +642,24 @@
         }
 
         // ==== Plot ====
+        // ==== Plot ====
         function loadData(ticker) {
+            /* ADD: แสดงสถานะโหลดขณะดึงข้อมูล */
+            showLoading('Loading …');
+
+            currentData = null;
+            $('#latest-date-info').text('Loading data...');
+            $('#prediction-summary')
+                .html('')
+                .removeClass('prediction-card-container')
+                .addClass('result-box');
+
             $.getJSON(`/data/${ticker}`, function (data) {
                 currentData = data;
+
+                const isLstmChecked = $('#lstm-checkbox').length ? $('#lstm-checkbox').is(':checked') : true;
+                const isTransChecked = $('#trans-checkbox').length ? $('#trans-checkbox').is(':checked') : true;
+                const isTcnChecked = $('#tcn-checkbox').length ? $('#tcn-checkbox').is(':checked') : true;
 
                 const trace1 = {
                     x: data.actual_dates, y: data.actual_prices, mode: 'lines', name: 'Actual Prices',
@@ -205,25 +669,25 @@
                 const trace2 = {
                     x: data.future_dates, y: data.lstm_prices, mode: 'lines+markers', name: 'LSTM Prediction',
                     line: { color: '#ff5252' },
-                    visible: $('#lstm-checkbox').is(':checked') ? true : 'legendonly',
+                    visible: isLstmChecked ? true : 'legendonly',
                     hovertemplate: 'Date: %{x}<br>Price: %{y:.2f}<extra></extra>'
                 };
                 const trace3 = {
                     x: data.future_dates, y: data.trans_prices, mode: 'lines+markers', name: 'Transformer Prediction',
                     line: { color: '#40c4ff' },
-                    visible: $('#trans-checkbox').is(':checked') ? true : 'legendonly',
+                    visible: isTransChecked ? true : 'legendonly',
                     hovertemplate: 'Date: %{x}<br>Price: %{y:.2f}<extra></extra>'
                 };
                 const trace4 = {
                     x: data.future_dates, y: data.tcn_prices, mode: 'lines+markers', name: 'TCN+GRU Prediction',
                     line: { color: '#ffd740' },
-                    visible: $('#tcn-checkbox').is(':checked') ? true : 'legendonly',
+                    visible: isTcnChecked ? true : 'legendonly',
                     hovertemplate: 'Date: %{x}<br>Price: %{y:.2f}<extra></extra>'
                 };
 
                 const layout = {
                     xaxis: { title: 'Date' },
-                    yaxis: { title: 'Price (USD)' },
+                    yaxis: { title: 'Price (USD)' ,gridcolor: '#3b3b3b'},
                     plot_bgcolor: "#1a1a1a", paper_bgcolor: "#1a1a1a",
                     font: { color: 'white' },
                     autosize: true,
@@ -237,37 +701,89 @@
 
                 $('#latest-date-info').text(`📅 Latest update ${data.latest_date}`);
 
-                const current_price = data.lstm_prices[0].toFixed(2);
+                // ⭐️ ดึงราคาปัจจุบันมาเตรียมไว้
+                const current_price = data.actual_prices[data.actual_prices.length - 1].toFixed(2);
+
                 const lstm_future_price = data.lstm_prices[data.lstm_prices.length - 1].toFixed(2);
                 const trans_future_price = data.trans_prices[data.trans_prices.length - 1].toFixed(2);
                 const tcn_future_price = (data.tcn_prices && data.tcn_prices.length ? data.tcn_prices[data.tcn_prices.length - 1].toFixed(2) : '-');
 
-                const lstm_text = `LSTM คาดการณ์ว่าอีก 30 วันจะ
-                    <span class="${data.lstm_return_pct >= 0 ? 'pos' : 'neg'}">
-                    ${data.lstm_return_pct >= 0 ? 'เพิ่มขึ้น📈' : 'ลดลง📉'} ${data.lstm_return_pct.toFixed(2)}%</span>
-                    จากราคา ${current_price} USD → ${lstm_future_price} USD`;
+                const lstmCheckedAttr = isLstmChecked ? 'checked' : '';
+                const transCheckedAttr = isTransChecked ? 'checked' : '';
+                const tcnCheckedAttr = isTcnChecked ? 'checked' : '';
 
-                const trans_text = `Transformer คาดการณ์ว่าอีก 30 วันจะ
-                    <span class="${data.trans_return_pct >= 0 ? 'pos' : 'neg'}">
-                    ${data.trans_return_pct >= 0 ? 'เพิ่มขึ้น📈' : 'ลดลง📉'} ${data.trans_return_pct.toFixed(2)}%</span>
-                    จากราคา ${current_price} USD → ${trans_future_price} USD`;
+                // ⭐️ อัปเดต HTML ให้แสดง "ราคาปัจจุบัน → ราคาอนาคต"
+                const lstm_html = `
+                  <div class="prediction-card card-lstm">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="lstm-checkbox" ${lstmCheckedAttr}>
+                        <span class="checkmark"></span>
+                    </label>
+                    <label for="lstm-checkbox" class="card-model-name" id="lstm-label-text">LSTM</label>
+                    <p class="card-subtitle">30-Day Forecast</p>
+                    <div class="price ${data.lstm_return_pct >= 0 ? 'flash-pos' : 'flash-neg'}">
+                        ${current_price} → ${lstm_future_price} USD
+                    </div>
+                    <div class="pct ${data.lstm_return_pct >= 0 ? 'flash-pos' : 'flash-neg'}">
+                      ${data.lstm_return_pct >= 0 ? '📈' : '📉'} ${data.lstm_return_pct.toFixed(2)}%
+                    </div>
+                  </div>`;
 
-                const tcn_text = (data.tcn_return_pct == null)
-                  ? `TCN+GRU: (ไม่มีข้อมูล)`
-                  : `TCN+GRU คาดการณ์ว่าอีก 30 วันจะ
-                      <span class="${data.tcn_return_pct >= 0 ? 'pos' : 'neg'}">
-                      ${data.tcn_return_pct >= 0 ? 'เพิ่มขึ้น📈' : 'ลดลง📉'} ${data.tcn_return_pct.toFixed(2)}%</span>
-                      จากราคา ${current_price} USD → ${tcn_future_price} USD`;
+                const trans_html = `
+                  <div class="prediction-card card-trans">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="trans-checkbox" ${transCheckedAttr}>
+                        <span class="checkmark"></span>
+                    </label>
+                    <label for="trans-checkbox" class="card-model-name" id="trans-label-text">Transformer</label>
+                    <p class="card-subtitle">30-Day Forecast</p>
+                    <div class="price ${data.trans_return_pct >= 0 ? 'flash-pos' : 'flash-neg'}">
+                        ${current_price} → ${trans_future_price} USD
+                    </div>
+                    <div class="pct ${data.trans_return_pct >= 0 ? 'flash-pos' : 'flash-neg'}">
+                      ${data.trans_return_pct >= 0 ? '📈' : '📉'} ${data.trans_return_pct.toFixed(2)}%
+                    </div>
+                  </div>`;
 
-                $('#prediction-summary').html(
-                  `<p><strong>${lstm_text}</strong></p>
-                   <p><strong>${trans_text}</strong></p>
-                   <p><strong>${tcn_text}</strong></p>`
-                );
+                const tcn_html = (data.tcn_return_pct == null)
+                  ? `<div class="prediction-card card-tcn">
+                       <label class="custom-checkbox">
+                           <input type="checkbox" id="tcn-checkbox" ${tcnCheckedAttr}>
+                           <span class="checkmark"></span>
+                       </label>
+                       <label for="tcn-checkbox" class="card-model-name" id="tcn-label-text">TCN+GRU</label>
+                       <p class="card-subtitle">30-Day Forecast</p>
+                       <div class="price">-</div>
+                       <div class="pct" style="color:#888;">No Data</div>
+                     </div>`
+                  : `<div class="prediction-card card-tcn">
+                       <label class="custom-checkbox">
+                           <input type="checkbox" id="tcn-checkbox" ${tcnCheckedAttr}>
+                           <span class="checkmark"></span>
+                       </label>
+                       <label for="tcn-checkbox" class="card-model-name" id="tcn-label-text">TCN+GRU</label>
+                       <p class="card-subtitle">30-Day Forecast</p>
+                       <div class="price ${data.tcn_return_pct >= 0 ? 'flash-pos' : 'flash-neg'}">
+                           ${current_price} → ${tcn_future_price} USD
+                       </div>
+                       <div class="pct ${data.tcn_return_pct >= 0 ? 'flash-pos' : 'flash-neg'}">
+                         ${data.tcn_return_pct >= 0 ? '📈' : '📉'} ${data.tcn_return_pct.toFixed(2)}%
+                       </div>
+                     </div>`;
+
+                $('#prediction-summary')
+                  .removeClass('result-box')
+                  .addClass('prediction-card-container')
+                  .html(lstm_html + trans_html + tcn_html);
+
+                updateTraceVisibility();
+
             }).fail(function(xhr){
                 const msg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Load error';
                 $('#latest-date-info').text(`⚠️ ${msg}`);
                 $('#prediction-summary').html('<p class="neg"><strong>Cannot load predictions for this ticker.</strong></p>');
+            }).always(function(){  /* ADD: ปิดสถานะโหลดเมื่อเสร็จ */
+                hideLoading();
             });
         }
 
@@ -279,6 +795,12 @@
             Plotly.restyle('graph', { visible: showLSTM ? true : 'legendonly' }, [1]);
             Plotly.restyle('graph', { visible: showTrans ? true : 'legendonly' }, [2]);
             Plotly.restyle('graph', { visible: showTCN ? true : 'legendonly' }, [3]);
+
+            if ($('#lstm-label-text').length) {
+                $('#lstm-label-text').toggleClass('active-lstm', showLSTM);
+                $('#trans-label-text').toggleClass('active-trans', showTrans);
+                $('#tcn-label-text').toggleClass('active-tcn', showTCN);
+            }
         }
 
         function setActive(ticker) {
@@ -286,31 +808,314 @@
             $(`.stock-link[data-ticker="${ticker}"]`).addClass("active");
         }
 
+
+        // ⬇️⬇️⬇️ MODIFIED: $(document).ready() ทั้งหมดถูกแทนที่ด้วยเวอร์ชันใหม่ ⬇️⬇️⬇️
         $(document).ready(function () {
+
+            // --- ⭐️ NEW: MATRIX RAIN SETUP ⭐️ ---
+            let matrixInterval;
+            const canvas = $('<canvas id="matrix-canvas"></canvas>');
+            $('#splash-screen').prepend(canvas);
+            const ctx = canvas[0].getContext('2d');
+            canvas[0].width = window.innerWidth;
+            canvas[0].height = window.innerHeight;
+            const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const numbers = '0123456789';
+            const characters = (katakana + alphabet + numbers).split('');
+            const fontSize = 16;
+            const columns = Math.ceil(canvas[0].width / fontSize);
+            const drops = [];
+            for (let x = 0; x < columns; x++) drops[x] = 1;
+
+            function drawMatrix() {
+                ctx.fillStyle = 'rgba(18, 18, 18, 0.05)';
+                ctx.fillRect(0, 0, canvas[0].width, canvas[0].height);
+                ctx.fillStyle = '#4CAF50';
+                ctx.font = fontSize + 'px monospace';
+                for (let i = 0; i < drops.length; i++) {
+                    const text = characters[Math.floor(Math.random() * characters.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    if (drops[i] * fontSize > canvas[0].height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+            // --- ⭐️ END MATRIX SETUP ⭐️ ---
+
+
             const firstTicker = $(".stock-link").first().data("ticker");
             setActive(firstTicker);
-            loadData(firstTicker);
 
-            // เปลี่ยนหุ้น
+            // --- ⭐️ โค้ดสำหรับ Splash Screen (อัปเดตตรรกะใหม่ล่าสุด) ⭐️ ---
+
+            const splashDuration = 3500;
+
+            // 1. ตรวจสอบ "วิธี" ที่เข้ามาในหน้านี้
+            const navigationEntries = performance.getEntriesByType("navigation");
+            let navType = "";
+            if (navigationEntries.length > 0) {
+                navType = navigationEntries[0].type;
+            }
+
+            // ⬇️ 2. (อัปเดต!) ตรวจสอบว่ามาจากลิงก์ภายในเว็บหรือไม่
+            const referrer = document.referrer;
+            let isInternalNavigation = false;
+            try {
+                // ลองเช็กว่า hostname ของหน้าที่แล้ว == hostname ของหน้าปัจจุบัน
+                if (referrer && new URL(referrer).hostname === window.location.hostname) {
+                    isInternalNavigation = true;
+                }
+            } catch (e) {
+                // ถ้ามี error (เช่น referrer ว่างเปล่า) ก็ปล่อยเป็น false
+                isInternalNavigation = false;
+            }
+
+            // ⬇️ 3. (อัปเดต!) ตรรกะการ "ข้าม"
+            // เราจะข้าม Matrix ถ้า...
+            //    (A) เป็นการกด Back/Forward
+            //    (B) หรือ เป็นการ navigate ที่มาจากเว็บเราเอง (isInternalNavigation)
+            const skipSplash = (navType === 'back_forward') || (navType === 'navigate' && isInternalNavigation);
+
+
+            function showContent() {
+                // สั่งให้ Dashboard ปรากฏตัว
+                $('.page-switch').css('animation', 'fadeIn 0.5s ease-out 0.1s forwards');
+                $('.tutorial-button').css('animation', 'fadeIn 0.5s ease-out 0.1s forwards');
+                $('.glossary-button').css('animation', 'fadeIn 0.5s ease-out 0.1s forwards');
+                $('.stock-menu').css('animation', 'fadeIn 0.5s ease-out 0.2s forwards');
+                $('.tfbar').css('animation', 'fadeIn 0.5s ease-out 0.3s forwards');
+                $('#graph').css('animation', 'fadeIn 0.5s ease-out 0.4s forwards');
+                $('#prediction-summary').css('animation', 'fadeIn 0.5s ease-out 0.5s forwards');
+            }
+
+            if (skipSplash) {
+                // 1. 🟢 ถ้ากด Back/Forward หรือ คลิกปุ่มข้ามหน้าภายในเว็บ (skipSplash = true)
+                // ซ่อนหน้าโหลด, โหลดข้อมูล, และแสดงเนื้อหาทันที
+                $('#splash-screen').hide(); // ซ่อนทันที
+                loadData(firstTicker);       // โหลดข้อมูล
+                showContent();             // แสดงเนื้อหา (แบบ fade-in)
+
+            } else {
+                // 2. 🔴 ถ้าเป็นการ "เข้าเว็บครั้งแรก" (navigate จากข้างนอก) หรือ "รีเฟรช" (reload)
+                // แสดงแอนิเมชันเต็มรูปแบบ
+                matrixInterval = setInterval(drawMatrix, 30); // ⬅️ เริ่มวาด
+
+                loadData(firstTicker); // โหลดข้อมูลระหว่างที่ Splash กำลังแสดง
+
+                setTimeout(function() {
+                    $('#splash-screen').addClass('splash-exit'); // ⬅️ ใช้คลาสใหม่
+                    showContent(); // เริ่มแสดงเนื้อหา
+
+                    setTimeout(function() {
+                        $('#splash-screen').hide();
+                        clearInterval(matrixInterval); // ⬅️ หยุดวาด
+                    }, 700); // เวลาของ transition
+
+                }, splashDuration);
+            }
+
+            // --- ⭐️ จบส่วน Splash Screen ⭐️ ---
+
+
+            // --- ⭐️ Event Handlers (ที่เหลือทั้งหมด) ⭐️ ---
+
             $(".stock-link").click(function (e) {
                 e.preventDefault();
                 const ticker = $(this).data("ticker");
+                /* ADD: แสดงสถานะตั้งแต่ผู้ใช้คลิกเปลี่ยนหุ้น */
+                showLoading('Loading …');
                 setActive(ticker);
                 loadData(ticker);
             });
 
-            // ปุ่ม timeframe
             $('#tfbar button').click(function(){
-              const tf = $(this).data('tf');
-              setTFActive(tf);
-              applyTimeframe(tf, currentData);
+                const tf = $(this).data('tf');
+                setTFActive(tf);
+                applyTimeframe(tf, currentData);
             });
 
-            // Checkbox แสดง/ซ่อนโมเดล
-            $('#lstm-checkbox').change(updateTraceVisibility);
-            $('#trans-checkbox').change(updateTraceVisibility);
-            $('#tcn-checkbox').change(updateTraceVisibility);
+            /* ADD: แสดงโหลดระหว่างกดสลับหน้า */
+            $('.page-switch').on('click', function(){
+                showLoading('Loading …');
+            });
+
+            $('#prediction-summary').on('change', '#lstm-checkbox', updateTraceVisibility);
+            $('#prediction-summary').on('change', '#trans-checkbox', updateTraceVisibility);
+            $('#prediction-summary').on('change', '#tcn-checkbox', updateTraceVisibility);
+
+            /* Graph hover interaction */
+            const FADE_OPACITY = 0.2;
+            const FULL_OPACITY = 1.0;
+            const ALL_MODEL_TRACES = [1, 2, 3];
+
+            $('#prediction-summary').on('mouseenter', '.prediction-card', function() {
+                if (!currentData) return;
+                let traceToHighlight;
+                let tracesToFade = [];
+                if ($(this).hasClass('card-lstm')) {
+                    traceToHighlight = 1; tracesToFade = [2, 3];
+                } else if ($(this).hasClass('card-trans')) {
+                    traceToHighlight = 2; tracesToFade = [1, 3];
+                } else if ($(this).hasClass('card-tcn')) {
+                    traceToHighlight = 3; tracesToFade = [1, 2];
+                } else { return; }
+                Plotly.restyle('graph', { 'opacity': FULL_OPACITY }, [traceToHighlight]);
+                if (tracesToFade.length > 0) {
+                    Plotly.restyle('graph', { 'opacity': FADE_OPACITY }, tracesToFade);
+                }
+            }).on('mouseleave', '.prediction-card', function() {
+                if (!currentData) return;
+                Plotly.restyle('graph', { 'opacity': FULL_OPACITY }, ALL_MODEL_TRACES);
+            });
+
+
+            /* JavaScript for ALL Modals */
+            $('#tutorial-btn').click(function() {
+                $('#tutorial-modal').css('display', 'flex');
+            });
+            $('#glossary-btn').click(function() {
+                $('#glossary-modal').css('display', 'flex');
+            });
+            $('.close-btn').click(function() {
+                $(this).closest('.modal').css('display', 'none');
+            });
+            $('.modal').click(function(event) {
+              if (event.target === this) {
+                $(this).css('display', 'none');
+              }
+            });
         });
     </script>
+
+    <script>
+    particlesJS("particles-js", {
+        "particles": {
+            "number": {
+            "value": 60, // ปรับจำนวนจุด
+            "density": {
+                "enable": true,
+                "value_area": 800
+            }
+            },
+            "color": {
+            "value": "#4CAF50" // สีของจุด (เทาเข้ม)
+            },
+            "shape": {
+            "type": "circle",
+            },
+            "opacity": {
+            "value": 0.4, // ความจาง
+            "random": false,
+            "anim": {
+                "enable": false
+            }
+            },
+            "size": {
+            "value": 3,
+            "random": true
+            },
+            "line_linked": {
+            "enable": true,
+            "distance": 150,
+            "color": "#4CAF50", // สีของเส้นเชื่อม
+            "opacity": 0.3,
+            "width": 1
+            },
+            "move": {
+            "enable": true,
+            "speed": 1.5, // ความเร็วในการเคลื่อนที่
+            "direction": "none",
+            "random": false,
+            "straight": false,
+            "out_mode": "out",
+            "bounce": false
+            }
+        },
+        "interactivity": {
+            "detect_on": "canvas",
+            "events": {
+            "onhover": {
+                "enable": true,
+                "mode": "grab" // ให้ความรู้สึก interactive
+            },
+            "onclick": {
+                "enable": false // ปิดการคลิก
+            },
+            "resize": true
+            },
+            "modes": {
+            "grab": {
+                "distance": 140,
+                "line_opacity": 0.5
+            },
+            "bubble": {
+                "distance": 400,
+                "size": 40,
+                "duration": 2,
+                "opacity": 8,
+                "speed": 3
+            },
+            "repulse": {
+                "distance": 200,
+                "duration": 0.4
+            },
+            "push": {
+                "particles_nb": 4
+            },
+            "remove": {
+                "particles_nb": 2
+            }
+            }
+        },
+        "retina_detect": true
+        });
+        // ===== Scroll Lock helpers =====
+      const __scrollLock = { y: 0 };
+      function lockBodyScroll() {
+        __scrollLock.y = window.scrollY || document.documentElement.scrollTop || 0;
+        document.body.classList.add('modal-open');
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${__scrollLock.y}px`;
+        document.body.style.width = '100%';
+      }
+      function unlockBodyScroll() {
+        document.body.classList.remove('modal-open');
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, __scrollLock.y);
+      }
+
+      // ===== Open / Close helpers =====
+      function openModal(sel) {
+        lockBodyScroll();
+        $(sel).css('display','flex');
+      }
+      function closeModal(elOrSel) {
+        const $m = (elOrSel instanceof HTMLElement) ? $(elOrSel) : $(elOrSel);
+        $m.css('display','none');
+        unlockBodyScroll();
+      }
+
+      // ===== Hook ปุ่มและพื้นหลัง =====
+      // (แทนที่โค้ดเดิมที่ใช้ .css('display','flex') / .css('display','none'))
+      $('#tutorial-btn').off('click').on('click', function(){ openModal('#tutorial-modal'); });
+      $('#glossary-btn').off('click').on('click', function(){ openModal('#glossary-modal'); });
+
+      $('.close-btn').off('click').on('click', function(){ closeModal($(this).closest('.modal')[0]); });
+
+      // คลิกพื้นหลังเพื่อปิด
+      $('.modal').off('click').on('click', function(e){
+        if (e.target === this) closeModal(this);
+      });
+
+      // กันสกรอลหลุดไปพื้นหลัง (iOS บางกรณี)
+      $('.modal').on('wheel touchmove', function(e){
+        if (e.target === this) e.preventDefault();
+      });
+    </script>
+
 </body>
 </html>
