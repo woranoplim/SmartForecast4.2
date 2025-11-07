@@ -307,6 +307,15 @@
         max-width: 1500px;
         margin: 0 auto;
     }
+    /* ให้รูปใน Tutorial modal ปรับขนาดพอดีกว้างกล่องเหมือนหน้า Index */
+    .modal-content img {
+      width: 100%;
+      height: auto;
+      border-radius: 5px;
+      display: block;
+      margin: 8px 0;
+    }
+
   </style>
 </head>
 <body>
@@ -437,14 +446,14 @@
   <div id="tutorial-modal" class="modal">
     <div class="modal-content">
       <span class="close-btn">&times;</span>
-      <h3 style="text-align:center; color:#40c4ff;">Trading Simulator — Tutorial</h3>
-      <p style="color:#ccc; margin-top:8px;">
-        • เลือกหุ้นจากเมนูด้านบนของการ์ด <b>Trade Signals</b> เพื่อโหลดสัญญาณซื้อ/ขายและกราฟราคา (ระบบจะแสดงสถานะโหลดสั้นๆ)<br>
-        • กราฟ <b>Portfolio Growth</b> ใช้ตัวเลือก <b>Model</b> เพื่อดูเส้น Equity ของโมเดลรวม หรือแยกรายโมเดล (LSTM/Transformer/TCN+GRU)<br>
-        • กล่อง <b>Summary</b> แสดงสรุปผลสำคัญ (Final Equity, Total Return, Max Drawdown, Win Rate) และมี <b>Calculator — Invest</b> คำนวณทุน×ผลตอบแทนรวม<br>
-        • <b>Trading History</b> ใช้ตัวกรอง Model/Status/Ticker และเปิดคอลัมน์ <i>Pred. Error %</i> เพื่อตรวจสอบความคลาดเคลื่อนของราคาที่คาดไว้กับราคาจริงตอนปิดออเดอร์<br>
-        • กดปุ่ม &larr; <b>Forecast</b> มุมขวาบนเพื่อกลับหน้าแสดงผลคาดการณ์ (มีสถานะโหลดสั้นๆก่อนเปลี่ยนหน้า)
-      </p>
+      <h3 style="text-align: center; color: #40c4ff;">Trading Simulator Tutorial</h3>
+      <p style="text-align: center; margin-top: 15px; color: #ccc;">คำอธิบายการใช้งานพร้อมภาพประกอบของเว็บไซต์ในส่วนต่างๆ</p>
+        <img src="/static/tutorial/tutorial7.png" alt="Tutorial Image">
+        <img src="/static/tutorial/tutorial8.png" alt="Tutorial Image">
+        <img src="/static/tutorial/tutorial9.png" alt="Tutorial Image">
+        <img src="/static/tutorial/tutorial10.png" alt="Tutorial Image">
+        <img src="/static/tutorial/tutorial11.png" alt="Tutorial Image">
+        <img src="/static/tutorial/tutorial12.png" alt="Tutorial Image">
     </div>
   </div>
 
@@ -452,50 +461,48 @@
   <div id="glossary-modal" class="modal">
     <div class="modal-content">
       <span class="close-btn">&times;</span>
-      <h3 style="text-align:center; color:#ffd740;">Words (อธิบายคำที่ควรรู้) — Trading Simulator</h3>
+      <h3 style="text-align:center; color:#ffd740;">Words (อธิบายคำที่ควรรู้) Trading Simulator</h3>
       <div class="glossary-list">
         <dl>
           <dt>Portfolio Growth (Equity Curve)</dt>
-          <dd>กราฟเส้นแสดงมูลค่าพอร์ตสะสมเมื่อทำตามสัญญาณเทรดของโมเดลที่เลือก (All/LSTM/Transformer/TCN+GRU)</dd>
+          <dd>กราฟแสดงมูลค่าพอร์ตลงทุนสะสมเมื่อซื้อ-ขายตามสัญญาณของโมเดลที่เลือก (All/LSTM/Transformer/TCN+GRU)</dd>
 
           <dt>Final Equity</dt>
-          <dd>มูลค่าพอร์ตสุดท้ายหลังจำลองครบช่วงเวลา (USD)</dd>
+          <dd>มูลค่าพอร์ตสุดท้ายหลังปิดออเดอร์การจำลองการซื้อ-ขาย (USD)</dd>
 
           <dt>Total Return (%)</dt>
           <dd>ผลตอบแทนรวมคิดเป็นเปอร์เซ็นต์จากเงินตั้งต้นของพอร์ต (All = ผลรวมทุกโมเดล, เลือกโมเดล = พอร์ตย่อยของโมเดลนั้น)</dd>
 
           <dt>Max Drawdown (%)</dt>
-          <dd>การลดลงสูงสุดจากจุดพีกของมูลค่าพอร์ตถึงจุดต่ำสุดถัดมา เป็นตัวชี้ความเสี่ยงการดิ่งของพอร์ต</dd>
+          <dd>การลดลงสูงสุดจากจุดสูงสุดของมูลค่าพอร์ตถึงจุดต่ำสุดถัดมา เป็นตัวชี้ความเสี่ยงของพอร์ต</dd>
 
           <dt>Win Rate (%)</dt>
           <dd>สัดส่วนออเดอร์ที่ปิดกำไรเมื่อเทียบกับจำนวนออเดอร์ทั้งหมด</dd>
 
           <dt>Calculator — Invest</dt>
-          <dd>เครื่องคิดเลขคูณเงินลงทุนเริ่มต้นกับ <b>Total Return (%)</b> ที่เลือกจากบล็อก Summary เพื่อประมาณการมูลค่าเงินปลายทาง (≈)</dd>
+          <dd>เครื่องมือคำนวณเงินลงทุนเริ่มต้นกับ <b>Total Return (%)</b> เพื่อประมาณการมูลค่าเงินหลังจำลองการซื้อ-ขายตามโมเดล (≈)</dd>
 
           <dt>Trade Signals (Markers)</dt>
           <dd>สัญลักษณ์ BUY/EXIT บนกราฟราคาจริง (สีตามโมเดล: LSTM แดง, Transformer ฟ้า, TCN+GRU เหลือง) ใช้ดูจุดเข้า–ออกของแต่ละโมเดล</dd>
 
           <dt>Open / Closed</dt>
-          <dd>สถานะออเดอร์: <b>Open</b> = ยังถืออยู่, <b>Closed</b> = ปิดแล้ว</dd>
+          <dd>สถานะออเดอร์: <b>Open</b> = เข้าซื้อและยังถืออยู่, <b>Closed</b> = ขายออกมาแล้ว </dd>
 
           <dt>Invested</dt>
-          <dd>เม็ดเงินที่ใช้เปิดออเดอร์ (USD)</dd>
+          <dd>เงินที่ใช้เปิดออเดอร์ (USD)</dd>
 
           <dt>Net P&L</dt>
-          <dd>กำไร/ขาดทุนสุทธิของออเดอร์ (รวมค่าคอมมิชชัน/ต้นทุนอื่นแล้ว หากระบบคำนวณไว้)</dd>
+          <dd>กำไร/ขาดทุนสุทธิของออเดอร์ (USD)</dd>
 
           <dt>Return %</dt>
           <dd>กำไร/ขาดทุนของออเดอร์คิดเป็นเปอร์เซ็นต์จากเงินที่ลงทุนในออเดอร์นั้น</dd>
 
           <dt>Expected Date / Expected Px</dt>
-          <dd>วันที่และราคาที่ <i>คาดหวัง</i> ตามการพยากรณ์ในตอนเปิดออเดอร์ (ใช้เปรียบเทียบกับผลจริงตอนปิด)</dd>
+          <dd>วันที่และราคาที่ <i>คาดหวัง</i> ตามการทำนายของโมเดลในตอนเปิดออเดอร์ (ใช้เปรียบเทียบกับผลจริงตอนปิด)</dd>
 
           <dt>Pred. Error %</dt>
-          <dd>ความคลาดเคลื่อนระหว่างราคาที่คาดไว้กับราคาจริงตอนปิดออเดอร์ (เปิดดูได้ด้วยเช็กบ็อกซ์ “Show Prediction Error %”)</dd>
+          <dd>ความคลาดเคลื่อนระหว่างราคาที่คาดไว้กับราคาจริงตอนปิดออเดอร์ (เปิดดูได้ด้วยcheck-box “Show Prediction Error %”)</dd>
 
-          <dt>Models</dt>
-          <dd><b>LSTM</b> (จำลำดับดี), <b>Transformer</b> (เข้าใจความสัมพันธ์ระยะไกล), <b>TCN+GRU</b> (ลูกผสมมองภาพรวม+ลำดับ)</dd>
         </dl>
       </div>
     </div>
@@ -667,7 +674,7 @@
         const layout = {
           title:'',
           xaxis:{ title:'Date', type:'date' },
-          yaxis:{ title:'Equity (USD)', tickprefix:'$', tickformat:',.0f' },
+          yaxis:{ title:'Equity (USD)', tickprefix:'$', tickformat:',.0f',gridcolor: '#3b3b3b' },
           plot_bgcolor:'#1a1a1a',
           paper_bgcolor:'#1a1a1a',
           font:{color:'#fff'},
