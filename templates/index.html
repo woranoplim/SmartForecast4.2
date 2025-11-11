@@ -345,11 +345,11 @@
         /* Flashing animations */
         @keyframes flash-green {
             0%, 100% { color: #00e676; }
-            50% { color: white; }
+            50% { color:#00e676; }
         }
         @keyframes flash-red {
             0%, 100% { color: #ef5350; }
-            50% { color: white; }
+            50% { color: #ef5350; }
         }
         .flash-pos {
             animation: flash-green 1.5s infinite ease-in-out;
@@ -385,13 +385,16 @@
         }
         .marquee-content {
             display: flex;
-            width: 200%;
             margin: 0;
             animation: marquee-scroll 50s linear infinite;
         }
         .marquee-content span {
-            width: 50%;
-            padding: 10px 0;
+            /* width: 50%; */    /* ⬅️ 2. ลบบรรทัดนี้ (หรือคอมเมนต์ออก) */
+            flex-shrink: 0;      /* ⬅️ 3. เพิ่มบรรทัดนี้ (สำคัญมาก) */
+
+            /* ⬇️ 4. แก้ไข padding เพื่อให้มีช่องว่างระหว่างลูป */
+            padding: 10px 40px;
+
             color: #ccc;
             font-size: 0.9em;
             white-space: nowrap;
@@ -481,6 +484,7 @@
 
     <h2 style="text-align: center;"><span class="glow-gradient">SmartForecast</span></h2>
     <p style="text-align: center; color:#ccc; font-size: 1.0em; margin-top: -10px;">AI-powered stock trend predictions</p>
+
     <div id="latest-date-info"></div>
 
     <div class="disclaimer-box"></div>
