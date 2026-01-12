@@ -1,6 +1,6 @@
 # SmartForecast4.2
 
-สามารถอ่านรายละเอียดโปรเจคได้ที่ไฟล์ Forecasting the 30-Day Daily Price Trend of U.S. Technology Stocks Using Machine Learning Techniques
+สามารถอ่านรายละเอียดโปรเจคได้ที่ไฟล์ Forecasting the 30-Day Daily Price Trend of U.S. Technology Stocks Using Machine Learning Techniques.pdf
 โฟลเดอร์ forecast
 เก็บไฟล์ทั้งหมดที่เกี่ยวข้องกับการคำนวณและบันทึกผลการพยากรณ์
 - โฟลเดอร์ datasets  เก็บชุดข้อมูลราคาหุ้นที่ผ่านการเตรียมข้อมูลแล้ว (CSV) สำหรับนำไปใช้ฝึกและทดสอบโมเดล
