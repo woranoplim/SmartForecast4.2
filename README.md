@@ -1,6 +1,7 @@
 # SmartForecast4.2
 
-สามารถอ่านรายละเอียดโปรเจคได้ที่ไฟล์ Forecasting the 30-Day Daily Price Trend of U.S. Technology Stocks Using Machine Learning Techniques.pdf
+สามารถอ่านรายละเอียดโปรเจคได้ที่ไฟล์
+Forecasting the 30-Day Daily Price Trend of U.S. Technology Stocks Using Machine Learning Techniques.pdf
 
 
 โฟลเดอร์ forecast
